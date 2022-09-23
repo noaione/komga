@@ -55,6 +55,14 @@ class SecurityConfiguration(
           "/set-cookie",
         ).permitAll()
 
+        // allow specific thumbnail route to unprotected
+        it.mvcMatchers(
+          "/api/v1/readlists/*/thumbnail",
+          "/api/v1/series/*/thumbnail",
+          "/api/v1/collections/*/thumbnail",
+          "/api/v1/books/*/thumbnail",
+        ).permitAll()
+
         // all other endpoints are restricted to authenticated users
         it.mvcMatchers(
           "/api/**",
