@@ -109,14 +109,17 @@ class SeriesCollectionController(
   @ApiResponse(content = [Content(schema = Schema(type = "string", format = "binary"))])
   @GetMapping(value = ["{id}/thumbnail"], produces = [MediaType.IMAGE_JPEG_VALUE])
   fun getCollectionThumbnail(
-    @AuthenticationPrincipal principal: KomgaPrincipal,
+    @AuthenticationPrincipal principal: KomgaPrincipal?,
     @PathVariable id: String,
   ): ResponseEntity<ByteArray> {
-    collectionRepository.findByIdOrNull(id, principal.user.getAuthorizedLibraryIds(null), principal.user.restrictions)?.let {
-      return ResponseEntity.ok()
-        .cacheControl(CacheControl.maxAge(1, TimeUnit.HOURS).cachePrivate())
-        .body(collectionLifecycle.getThumbnailBytes(it, principal.user.id))
-    } ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+    if (principal != null) {
+      collectionRepository.findByIdOrNull(id, principal.user.getAuthorizedLibraryIds(null), principal.user.restrictions)?.let {
+        return ResponseEntity.ok()
+          .cacheControl(CacheControl.maxAge(1, TimeUnit.HOURS).cachePrivate())
+          .body(collectionLifecycle.getThumbnailBytes(it, principal.user.id))
+      } ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+    }
+    throw ResponseStatusException(HttpStatus.FORBIDDEN)
   }
 
   @ApiResponse(content = [Content(schema = Schema(type = "string", format = "binary"))])
