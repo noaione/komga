@@ -423,7 +423,7 @@ const validIsbn = (value: string) => !helpers.req(value) || new IsbnVerify(value
 export default Vue.extend({
   name: 'EditBooksDialog',
   components: {ThumbnailCard, DropZone},
-  data: function () {
+  data: () => {
     return {
       modal: false,
       tab: 0,
