@@ -58,6 +58,7 @@
     <edit-books-dialog
       v-model="updateBooksDialog"
       :books="updateBooks"
+      :additional-roles="updateBooksAdditionalRoles"
     />
 
     <bulk-edit-books-dialog
@@ -231,6 +232,9 @@ export default Vue.extend({
     },
     updateBooks(): BookDto | BookDto[] {
       return this.$store.state.updateBooks
+    },
+    updateBooksAdditionalRoles(): string[] {
+      return this.$store.state.updateBooksAdditionalRoles
     },
     // books bulk
     updateBulkBooksDialog: {

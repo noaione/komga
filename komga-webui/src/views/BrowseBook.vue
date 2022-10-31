@@ -613,7 +613,7 @@ export default Vue.extend({
       this.$komgaBooks.refreshMetadata(this.book)
     },
     editBook() {
-      this.$store.dispatch('dialogUpdateBooks', this.book)
+      this.$store.dispatch('dialogUpdateBooks', { book: this.book, roles: [] })
     },
   },
 })

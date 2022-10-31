@@ -423,7 +423,7 @@ const validIsbn = (value: string) => !helpers.req(value) || new IsbnVerify(value
 export default Vue.extend({
   name: 'EditBooksDialog',
   components: {ThumbnailCard, DropZone},
-  data: () => {
+  data: function () {
     return {
       modal: false,
       tab: 0,
@@ -467,6 +467,11 @@ export default Vue.extend({
     books: {
       type: [Object as () => BookDto, Array as () => BookDto[]],
       required: true,
+    },
+    additionalRoles: {
+      type: Array as () => string[],
+      required: false,
+      default: () => [],
     },
   },
   watch: {
@@ -527,7 +532,7 @@ export default Vue.extend({
         remoteRoles = this.books.flatMap(b => b.metadata.authors).map(a => a.role)
       else if (this.books?.metadata?.authors)
         remoteRoles = this.books.metadata.authors.map(a => a.role)
-      const allRoles = this.$_.uniq([...authorRoles, ...remoteRoles, ...this.customRoles])
+      const allRoles = this.$_.uniq([...authorRoles, ...remoteRoles, ...this.additionalRoles, ...this.customRoles])
       return allRoles.map((role: string) => ({
         name: this.$te(`author_roles.${role}`) ? this.$t(`author_roles.${role}`).toString() : role,
         value: role,

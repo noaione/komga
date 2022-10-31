@@ -374,10 +374,10 @@ export default Vue.extend({
       this.loadBooks(this.readListId)
     }, 1000),
     editSingleBook(book: BookDto) {
-      this.$store.dispatch('dialogUpdateBooks', book)
+      this.$store.dispatch('dialogUpdateBooks', { books: book, roles: [] })
     },
     editMultipleBooks() {
-      this.$store.dispatch('dialogUpdateBooks', this.selectedBooks)
+      this.$store.dispatch('dialogUpdateBooks', { books: this.selectedBooks, roles: [] })
     },
     bulkEditMultipleBooks() {
       this.$store.dispatch('dialogUpdateBulkBooks', this.selectedBooks)

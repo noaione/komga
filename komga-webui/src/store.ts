@@ -38,6 +38,7 @@ export default new Vuex.Store({
     updateBooksDialog: false,
     deleteBooks: {} as BookDto | BookDto[],
     deleteBookDialog: false,
+    updateBooksAdditionalRoles: [] as string[],
     // books bulk
     updateBulkBooks: [] as BookDto[],
     updateBulkBooksDialog: false,
@@ -114,6 +115,9 @@ export default new Vuex.Store({
     },
     setDeleteBookDialog(state, dialog) {
       state.deleteBookDialog = dialog
+    },
+    setUpdateBooksAdditionalRoles(state, roles) {
+      state.updateBooksAdditionalRoles = roles
     },
     // Books bulk
     setUpdateBulkBooks(state, books) {
@@ -204,8 +208,9 @@ export default new Vuex.Store({
       commit('setDeleteLibraryDialog', value)
     },
     // books
-    dialogUpdateBooks({commit}, books) {
+    dialogUpdateBooks({commit}, {books, roles}) {
       commit('setUpdateBooks', books)
+      commit('setUpdateBooksAdditionalRoles', roles)
       commit('setUpdateBooksDialog', true)
     },
     dialogUpdateBooksDisplay({commit}, value) {

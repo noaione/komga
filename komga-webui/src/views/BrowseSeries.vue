@@ -818,10 +818,12 @@ export default Vue.extend({
       this.$store.dispatch('dialogUpdateSeries', this.series)
     },
     editSingleBook(book: BookDto) {
-      this.$store.dispatch('dialogUpdateBooks', book)
+      const customRole = this.books.flatMap((b) => b.metadata.authors.map((a) => a.role)).filter((ra) => !authorRoles.includes(ra))
+      this.$store.dispatch('dialogUpdateBooks', { books: book, roles: customRole })
     },
     editMultipleBooks() {
-      this.$store.dispatch('dialogUpdateBooks', this.selectedBooks)
+      const customRole = this.books.flatMap((b) => b.metadata.authors.map((a) => a.role)).filter((ra) => !authorRoles.includes(ra))
+      this.$store.dispatch('dialogUpdateBooks', { books: this.selectedBooks, roles: customRole })
     },
     bulkEditMultipleBooks() {
       this.$store.dispatch('dialogUpdateBulkBooks', this.$_.sortBy(this.selectedBooks, ['metadata.numberSort']))
