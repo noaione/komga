@@ -300,7 +300,7 @@ export default Vue.extend({
       this.$store.dispatch('dialogUpdateSeries', series)
     },
     singleEditBook(book: BookDto) {
-      this.$store.dispatch('dialogUpdateBooks', book)
+      this.$store.dispatch('dialogUpdateBooks', { books: book, roles: [] })
     },
     singleEditCollection(collection: CollectionDto) {
       this.$store.dispatch('dialogEditCollection', collection)
@@ -334,7 +334,7 @@ export default Vue.extend({
       this.$store.dispatch('dialogUpdateSeries', this.selectedSeries)
     },
     editMultipleBooks() {
-      this.$store.dispatch('dialogUpdateBooks', this.selectedBooks)
+      this.$store.dispatch('dialogUpdateBooks', { books: this.selectedBooks, roles: [] })
     },
     bulkEditMultipleBooks() {
       this.$store.dispatch('dialogUpdateBulkBooks', this.selectedBooks)
