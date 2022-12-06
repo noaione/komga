@@ -13,7 +13,7 @@ plugins {
   id("nu.studer.jooq") version "5.2.2" // 6.0.0 requires Java 11
   id("org.flywaydb.flyway") version "8.5.13"
   id("com.github.johnrengelman.processes") version "0.5.0"
-  id("org.springdoc.openapi-gradle-plugin") version "1.4.0"
+  id("org.springdoc.openapi-gradle-plugin") version "1.5.0"
   id("org.gradle.crypto.checksum") version "1.4.0"
 
   jacoco
@@ -63,7 +63,7 @@ dependencies {
   implementation("io.hawt:hawtio-springboot:2.16.1")
 
   run {
-    val springdocVersion = "1.6.12"
+    val springdocVersion = "1.6.13"
     implementation("org.springdoc:springdoc-openapi-ui:$springdocVersion")
     implementation("org.springdoc:springdoc-openapi-security:$springdocVersion")
     implementation("org.springdoc:springdoc-openapi-kotlin:$springdocVersion")
@@ -88,7 +88,7 @@ dependencies {
 
   implementation("org.apache.tika:tika-core:2.4.1") // 2.5.0 brings SLF4J 2
   implementation("org.apache.commons:commons-compress:1.22")
-  implementation("com.github.junrar:junrar:7.5.3")
+  implementation("com.github.junrar:junrar:7.5.4")
   implementation("org.apache.pdfbox:pdfbox:2.0.27")
   implementation("net.grey-panther:natural-comparator:1.1")
   implementation("org.jsoup:jsoup:1.15.3")
@@ -111,8 +111,8 @@ dependencies {
 
   implementation("com.github.ben-manes.caffeine:caffeine:2.9.3") // 3.0.0 requires Java 11
 
-  implementation("org.xerial:sqlite-jdbc:3.39.3.0")
-  jooqGenerator("org.xerial:sqlite-jdbc:3.39.3.0")
+  implementation("org.xerial:sqlite-jdbc:3.40.0.0")
+  jooqGenerator("org.xerial:sqlite-jdbc:3.40.0.0")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test") {
     exclude(module = "mockito-core")
@@ -125,8 +125,8 @@ dependencies {
   testImplementation("com.tngtech.archunit:archunit-junit5:0.23.1")
 
   benchmarkImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
-  benchmarkImplementation("org.openjdk.jmh:jmh-core:1.35")
-  kaptBenchmark("org.openjdk.jmh:jmh-generator-annprocess:1.35")
+  benchmarkImplementation("org.openjdk.jmh:jmh-core:1.36")
+  kaptBenchmark("org.openjdk.jmh:jmh-generator-annprocess:1.36")
   kaptBenchmark("org.springframework.boot:spring-boot-configuration-processor:2.7.5")
 
   developmentOnly("org.springframework.boot:spring-boot-devtools:2.7.5")
