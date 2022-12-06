@@ -27,6 +27,8 @@ class KomgaProperties {
   @Deprecated("Deprecated since 0.143.0, you can configure this in the library options directly")
   var fileHashing: Boolean = true
 
+  var findDuplicatePages: Boolean = true
+
   @Positive
   var pageHashing: Int = 3
 
