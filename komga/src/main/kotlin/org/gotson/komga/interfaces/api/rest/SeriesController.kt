@@ -475,12 +475,12 @@ class SeriesController(
   @ApiResponse(content = [Content(schema = Schema(type = "string", format = "binary"))])
   @GetMapping(value = ["v1/series/{seriesId}/thumbnail"], produces = [MediaType.IMAGE_JPEG_VALUE])
   fun getSeriesThumbnail(
-    @AuthenticationPrincipal principal: KomgaPrincipal,
+    @AuthenticationPrincipal principal: KomgaPrincipal?,
     @PathVariable(name = "seriesId") seriesId: String,
   ): ByteArray {
-    principal.user.checkContentRestriction(seriesId)
+    principal?.user?.checkContentRestriction(seriesId)
 
-    return seriesLifecycle.getThumbnailBytes(seriesId, principal.user.id)
+    return seriesLifecycle.getThumbnailBytes(seriesId, principal?.user?.id)
       ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
   }
 
