@@ -79,6 +79,11 @@ class SecurityConfiguration(
           "api/v1/books/{bookId}/resource/**",
           // OPDS authentication document
           "/opds/v2/auth",
+          // public thumbnail
+          "/api/v1/readlists/*/thumbnail",
+          "/api/v1/series/*/thumbnail",
+          "/api/v1/collections/*/thumbnail",
+          "/api/v1/books/*/thumbnail",
         ).permitAll()
 
         // all other endpoints are restricted to authenticated users
