@@ -261,7 +261,7 @@ class SeriesLifecycle(
 
   fun getThumbnailBytes(
     seriesId: String,
-    userId: String,
+    userId: String?,
   ): ByteArray? {
     getSelectedThumbnail(seriesId)?.let {
       return getBytesFromThumbnailSeries(it)
@@ -271,13 +271,14 @@ class SeriesLifecycle(
       val bookId =
         when (libraryRepository.findById(series.libraryId).seriesCover) {
           Library.SeriesCover.FIRST -> bookRepository.findFirstIdInSeriesOrNull(seriesId)
-          Library.SeriesCover.FIRST_UNREAD_OR_FIRST ->
-            bookRepository.findFirstUnreadIdInSeriesOrNull(seriesId, userId)
-              ?: bookRepository.findFirstIdInSeriesOrNull(seriesId)
-
-          Library.SeriesCover.FIRST_UNREAD_OR_LAST ->
-            bookRepository.findFirstUnreadIdInSeriesOrNull(seriesId, userId)
-              ?: bookRepository.findLastIdInSeriesOrNull(seriesId)
+          Library.SeriesCover.FIRST_UNREAD_OR_FIRST -> {
+            if (userId != null) {
+              bookRepository.findFirstUnreadIdInSeriesOrNull(seriesId, userId)
+                ?: bookRepository.findFirstIdInSeriesOrNull(seriesId)
+            } else {
+              bookRepository.findFirstIdInSeriesOrNull(seriesId)
+            }
+          }
 
           Library.SeriesCover.LAST -> bookRepository.findLastIdInSeriesOrNull(seriesId)
         }
