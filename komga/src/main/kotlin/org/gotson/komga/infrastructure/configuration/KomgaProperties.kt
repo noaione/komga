@@ -25,6 +25,8 @@ class KomgaProperties {
     }
   }
 
+  var findDuplicatePages: Boolean = true
+
   @Positive
   var pageHashing: Int = 3
 
