@@ -76,6 +76,11 @@ class SecurityConfiguration(
           "/api/v1/oauth2/providers",
           // epub resources - fonts are always requested anonymously, so we check for authorization within the controller method directly
           "api/v1/books/{bookId}/resource/**",
+          // public thumbnail
+          "/api/v1/readlists/*/thumbnail",
+          "/api/v1/series/*/thumbnail",
+          "/api/v1/collections/*/thumbnail",
+          "/api/v1/books/*/thumbnail",
         ).permitAll()
 
         // all other endpoints are restricted to authenticated users
