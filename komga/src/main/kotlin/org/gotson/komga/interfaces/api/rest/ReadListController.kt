@@ -148,7 +148,7 @@ class ReadListController(
   @ApiResponse(content = [Content(schema = Schema(type = "string", format = "binary"))])
   @GetMapping(value = ["{id}/thumbnail"], produces = [MediaType.IMAGE_JPEG_VALUE])
   fun getReadListThumbnail(
-    @AuthenticationPrincipal principal: KomgaPrincipal,
+    @AuthenticationPrincipal principal: KomgaPrincipal?,
     @PathVariable id: String,
   ): ResponseEntity<ByteArray> {
     readListRepository.findByIdOrNull(id, SearchContext(principal.user))?.let {
