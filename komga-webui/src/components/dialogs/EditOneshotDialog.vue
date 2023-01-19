@@ -574,7 +574,7 @@ import {isMatch} from 'date-fns'
 import IsbnVerify from '@saekitominaga/isbn-verify'
 import {debounce} from 'lodash'
 import {authorRoles} from '@/types/author-roles'
-import {groupAuthorsByRole} from '@/functions/authors'
+import {buildManyAuthorsByRole, groupAuthorsByRole} from '@/functions/authors'
 
 const tags = require('language-tags')
 
@@ -892,10 +892,20 @@ export default Vue.extend({
         this.form.series.sharingLabelsLock = sharingLabelsLock.length > 1 ? false : sharingLabelsLock[0]
 
         this.form.book.links = []
-        this.form.book.authors = {}
+        this.form.book.authors = buildManyAuthorsByRole(oneshots.map(x => x.book))
+
+        let forceAuthorLock = false
+        for (const oneshot of oneshots) {
+          const bookAuthor = groupAuthorsByRole(oneshot.book.metadata.authors)
+          if (!this.$_.isEqual(bookAuthor, this.form.book.authors)) {
+            this.isMultiBookAuthorDirty = true
+            forceAuthorLock = true
+            break
+          }
+        }
 
         const authorsLock = this.$_.uniq(oneshots.map(x => x.book.metadata.authorsLock))
-        this.form.book.authorsLock = authorsLock.length > 1 ? false : authorsLock[0]
+        this.form.book.authorsLock = authorsLock.length > 1 ? false : authorsLock[0] || forceAuthorLock
       } else {
         this.form.series.genres = []
         this.form.series.sharingLabels = []
@@ -937,7 +947,7 @@ export default Vue.extend({
           tagsLock: this.form.book.tagsLock,
         }
 
-        if (this.$v.form?.book?.authors?.$dirty) {
+        if (this.$v.form?.book?.authors?.$dirty || this.isMultiBookAuthorDirty) {
           this.$_.merge(metadataBook, {
             authors: this.$_.keys(this.form.book.authors).flatMap((role: string) =>
               this.$_.get(this.form.book.authors, role).map((name: string) => ({name: name, role: role})),
