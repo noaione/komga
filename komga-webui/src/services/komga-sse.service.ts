@@ -103,6 +103,9 @@ export default class KomgaSseService {
     this.eventSource.addEventListener('TaskQueueStatus', (event: any) => this.updateTaskCount(event))
 
     this.eventSource.addEventListener('SessionExpired', (event: any) => this.emit(SESSION_EXPIRED, event))
+
+    // Reconnection
+    this.eventSource.addEventListener('error', (event: Event) => this.handleReconnection(event))
   }
 
   disconnect() {
@@ -116,5 +119,18 @@ export default class KomgaSseService {
   private updateTaskCount(event: any) {
     const data = JSON.parse(event.data) as TaskQueueSseDto
     this.store.commit('setTaskCount', data)
+  }
+
+  private handleReconnection(event: Event) {
+    // map target to EventSource
+    const source = event.target as EventSource | null
+    if (source) {
+      switch (source.readyState) {
+        case EventSource.CLOSED:
+          // reconnect
+          this.connect()
+          break
+      }
+    }
   }
 }
