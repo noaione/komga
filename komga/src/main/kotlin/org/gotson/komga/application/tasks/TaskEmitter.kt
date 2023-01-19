@@ -10,6 +10,7 @@ import org.gotson.komga.domain.model.Library
 import org.gotson.komga.domain.model.Media
 import org.gotson.komga.domain.persistence.BookRepository
 import org.gotson.komga.domain.service.BookConverter
+import org.gotson.komga.infrastructure.configuration.KomgaProperties
 import org.gotson.komga.infrastructure.jooq.UnpagedSorted
 import org.gotson.komga.infrastructure.search.LuceneEntity
 import org.springframework.context.ApplicationEventPublisher
@@ -24,6 +25,7 @@ class TaskEmitter(
   private val bookConverter: BookConverter,
   private val tasksRepository: TasksRepository,
   private val eventPublisher: ApplicationEventPublisher,
+  private val komgaProperties: KomgaProperties,
 ) {
   fun scanLibrary(
     libraryId: String,
@@ -109,7 +111,8 @@ class TaskEmitter(
     library: Library,
     priority: Int = DEFAULT_PRIORITY,
   ) {
-    submitTask(Task.FindDuplicatePagesToDelete(library.id, priority))
+    if (komgaProperties.findDuplicatePages)
+      submitTask(Task.FindDuplicatePagesToDelete(library.id, priority))
   }
 
   fun removeDuplicatePages(
