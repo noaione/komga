@@ -40,6 +40,8 @@ class KomgaProperties {
   @Deprecated("Moved to server settings since 1.5.0")
   var deleteEmptyCollections: Boolean = true
 
+  var findDuplicatePages: Boolean = true
+
   @Positive
   var pageHashing: Int = 3
 
