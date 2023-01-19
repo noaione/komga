@@ -125,9 +125,12 @@ class SeriesCollectionController(
   @ApiResponse(content = [Content(schema = Schema(type = "string", format = "binary"))])
   @GetMapping(value = ["{id}/thumbnail"], produces = [MediaType.IMAGE_JPEG_VALUE])
   fun getCollectionThumbnail(
-    @AuthenticationPrincipal principal: KomgaPrincipal,
+    @AuthenticationPrincipal principal: KomgaPrincipal?,
     @PathVariable id: String,
   ): ResponseEntity<ByteArray> {
+    if (principal == null) {
+      throw ResponseStatusException(HttpStatus.UNAUTHORIZED)
+    }
     collectionRepository.findByIdOrNull(id, principal.user.getAuthorizedLibraryIds(null), principal.user.restrictions)?.let {
       return ResponseEntity
         .ok()
