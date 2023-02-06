@@ -64,6 +64,19 @@ class TaskHandler(
               taskEmitter.hashBooksWithoutHashKoreader(library)
             } ?: logger.warn { "Cannot execute task $task: Library does not exist" }
 
+          is Task.ScanSeries ->
+            seriesRepository.findByIdOrNull(task.seriesId)?.let { series ->
+              libraryRepository.findByIdOrNull(series.libraryId)?.let { library ->
+                libraryContentLifecycle.scanSeries(series, library, task.scanDeep)
+                taskEmitter.analyzeUnknownAndOutdatedBooks(library)
+                taskEmitter.repairExtensions(library, LOW_PRIORITY)
+                taskEmitter.findBooksToConvert(library, LOWEST_PRIORITY)
+                taskEmitter.findBooksWithMissingPageHash(library, LOWEST_PRIORITY)
+                taskEmitter.findDuplicatePagesToDelete(library, LOWEST_PRIORITY)
+                taskEmitter.hashBooksWithoutHash(library)
+              } ?: logger.warn { "Cannot execute $task: Associated library does not exist" }
+            } ?: logger.warn { "Cannot execute $task: Series does not exist" }
+
           is Task.FindBooksToConvert ->
             libraryRepository.findByIdOrNull(task.libraryId)?.let { library ->
               taskEmitter.convertBookToCbz(bookConverter.getConvertibleBooks(library), task.priority + 1)
