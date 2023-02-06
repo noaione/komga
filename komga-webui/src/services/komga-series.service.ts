@@ -188,6 +188,18 @@ export default class KomgaSeriesService {
     }
   }
 
+  async scanSeries(series: SeriesDto, scanDeep: boolean = false) {
+    try {
+      await this.http.post(`${API_SERIES}/${series.id}/scan?scanDeep=${scanDeep}`)
+    } catch (e) {
+      let msg = `An error occurred while trying to scan series '${series.name}'`
+      if (e.response.data.message) {
+        msg += `: ${e.response.data.message}`
+      }
+      throw new Error(msg)
+    }
+  }
+
   async analyzeSeries(series: SeriesDto) {
     try {
       await this.http.post(`${API_SERIES}/${series.id}/analyze`)

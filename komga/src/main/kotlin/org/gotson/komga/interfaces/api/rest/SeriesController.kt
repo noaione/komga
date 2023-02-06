@@ -629,6 +629,18 @@ class SeriesController(
       .map { it.toDto() }
   }
 
+  @PostMapping("v1/series/{seriesId}/scan")
+  @PreAuthorize("hasRole('$ROLE_ADMIN')")
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  fun scan(
+    @PathVariable seriesId: String,
+    @RequestParam(name = "scanDeep", required = false) scanDeep: Boolean?,
+  ) {
+    seriesRepository.findByIdOrNull(seriesId)?.let { series ->
+      taskEmitter.scanSeries(series.id, scanDeep ?: false, HIGHEST_PRIORITY)
+    } ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+  }
+
   @PostMapping("v1/series/{seriesId}/analyze")
   @PreAuthorize("hasRole('ADMIN')")
   @ResponseStatus(HttpStatus.ACCEPTED)
