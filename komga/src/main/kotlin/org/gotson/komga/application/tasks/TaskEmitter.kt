@@ -35,6 +35,14 @@ class TaskEmitter(
     submitTask(Task.ScanLibrary(libraryId, scanDeep, priority))
   }
 
+  fun scanSeries(
+    seriesId: String,
+    scanDeep: Boolean = false,
+    priority: Int = DEFAULT_PRIORITY,
+  ) {
+    submitTask(Task.ScanSeries(seriesId, scanDeep, priority))
+  }
+
   fun emptyTrash(
     libraryId: String,
     priority: Int = DEFAULT_PRIORITY,
