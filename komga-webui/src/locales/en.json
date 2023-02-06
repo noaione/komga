@@ -913,6 +913,8 @@
     "refresh_metadata": "Refresh metadata",
     "scan_library_files": "Scan library files",
     "scan_library_files_deep": "Scan library files (deep)",
+    "scan_series_files": "Scan series files",
+    "scan_series_files_deep": "Deep scan series files",
     "select_all": "Select all",
     "unpin": "Unpin"
   },
