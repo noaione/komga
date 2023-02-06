@@ -7,6 +7,12 @@
         </v-btn>
       </template>
       <v-list dense>
+        <v-list-item @click="scan" v-if="isAdmin">
+          <v-list-item-title>{{ $t('menu.scan_series_files') }}</v-list-item-title>
+        </v-list-item>
+        <v-list-item @click="deepScan" v-if="isAdmin">
+          <v-list-item-title>{{ $t('menu.scan_series_files_deep') }}</v-list-item-title>
+        </v-list-item>
         <v-list-item @click="analyze" v-if="isAdmin">
           <v-list-item-title>{{ $t('menu.analyze') }}</v-list-item-title>
         </v-list-item>
@@ -71,6 +77,12 @@ export default Vue.extend({
     },
   },
   methods: {
+    scan() {
+      this.$komgaSeries.scanSeries(this.series)
+    },
+    deepScan() {
+      this.$komgaSeries.scanSeries(this.series, true)
+    },
     analyze() {
       this.$komgaSeries.analyzeSeries(this.series)
     },
