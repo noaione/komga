@@ -644,6 +644,19 @@ class SeriesController(
       .map { it.toDto() }
   }
 
+  @Operation(summary = "Scan a series", tags = [OpenApiConfiguration.TagNames.SERIES])
+  @PostMapping("v1/series/{seriesId}/scan")
+  @PreAuthorize("hasRole('ADMIN')")
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  fun scan(
+    @PathVariable seriesId: String,
+    @RequestParam(name = "scanDeep", required = false) scanDeep: Boolean?,
+  ) {
+    seriesRepository.findByIdOrNull(seriesId)?.let { series ->
+      taskEmitter.scanSeries(series.id, scanDeep ?: false, HIGHEST_PRIORITY)
+    } ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+  }
+
   @Operation(summary = "Analyze series", tags = [OpenApiConfiguration.TagNames.SERIES])
   @PostMapping("v1/series/{seriesId}/analyze")
   @PreAuthorize("hasRole('ADMIN')")
