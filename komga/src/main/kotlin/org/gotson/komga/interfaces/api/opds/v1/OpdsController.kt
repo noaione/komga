@@ -86,7 +86,9 @@ private const val ROUTE_ON_DECK = "ondeck"
 private const val ROUTE_KEEP_READING = "keep-reading"
 private const val ROUTE_SERIES_ALL = "series"
 private const val ROUTE_SERIES_LATEST = "series/latest"
+private const val ROUTE_SERIES_LATEST_LIBRARIES = "series/latest-library"
 private const val ROUTE_BOOKS_LATEST = "books/latest"
+private const val ROUTE_BOOKS_LATEST_LIBRARIES = "books/latest-library"
 private const val ROUTE_LIBRARIES_ALL = "libraries"
 private const val ROUTE_COLLECTIONS_ALL = "collections"
 private const val ROUTE_READLISTS_ALL = "readlists"
@@ -97,7 +99,9 @@ private const val ID_ON_DECK = "ondeck"
 private const val ID_KEEP_READING = "keepReading"
 private const val ID_SERIES_ALL = "allSeries"
 private const val ID_SERIES_LATEST = "latestSeries"
+private const val ID_SERIES_LATEST_LIBRARIES = "latestSeriesByLibraries"
 private const val ID_BOOKS_LATEST = "latestBooks"
+private const val ID_BOOKS_LATEST_LIBRARIES = "latestBooksByLibraries"
 private const val ID_LIBRARIES_ALL = "allLibraries"
 private const val ID_COLLECTIONS_ALL = "allCollections"
 private const val ID_READLISTS_ALL = "allReadLists"
@@ -196,11 +200,25 @@ class OpdsController(
             link = OpdsLinkFeedNavigation(OpdsLinkRel.SUBSECTION, uriBuilder(ROUTE_SERIES_LATEST).toUriString()),
           ),
           OpdsEntryNavigation(
+            title = "Latest series by libraries",
+            updated = ZonedDateTime.now(),
+            id = ID_SERIES_LATEST_LIBRARIES,
+            content = "Browse latest series by libraries",
+            link = OpdsLinkFeedNavigation(OpdsLinkRel.SUBSECTION, uriBuilder(ROUTE_SERIES_LATEST_LIBRARIES).toUriString()),
+          ),
+          OpdsEntryNavigation(
             title = "Latest books",
             updated = ZonedDateTime.now(),
             id = ID_BOOKS_LATEST,
             content = "Browse latest books",
             link = OpdsLinkFeedNavigation(OpdsLinkRel.SUBSECTION, uriBuilder(ROUTE_BOOKS_LATEST).toUriString()),
+          ),
+          OpdsEntryNavigation(
+            title = "Latest books by libraries",
+            updated = ZonedDateTime.now(),
+            id = ID_BOOKS_LATEST_LIBRARIES,
+            content = "Browse latest books by libraries",
+            link = OpdsLinkFeedNavigation(OpdsLinkRel.SUBSECTION, uriBuilder(ROUTE_BOOKS_LATEST_LIBRARIES).toUriString()),
           ),
           OpdsEntryNavigation(
             title = "All libraries",
@@ -391,6 +409,31 @@ class OpdsController(
   }
 
   @PageAsQueryParam
+  @GetMapping(ROUTE_SERIES_LATEST_LIBRARIES)
+  fun getLatestSeriesByLibraries(
+    @AuthenticationPrincipal principal: KomgaPrincipal,
+  ): OpdsFeed {
+    val libraries =
+      if (principal.user.sharedAllLibraries) {
+        libraryRepository.findAll()
+      } else {
+        libraryRepository.findAllByIds(principal.user.sharedLibrariesIds)
+      }
+    return OpdsFeedNavigation(
+      id = ID_SERIES_LATEST_LIBRARIES,
+      title = "Latest series by libraries",
+      updated = ZonedDateTime.now(),
+      author = komgaAuthor,
+      links =
+        listOf(
+          OpdsLinkFeedNavigation(OpdsLinkRel.SELF, uriBuilder(ROUTE_SERIES_LATEST_LIBRARIES).toUriString()),
+          linkStart(),
+        ),
+      entries = libraries.map { it.toLatestOpdsEntry(ID_SERIES_LATEST_LIBRARIES, "Latest series", ROUTE_SERIES_LATEST_LIBRARIES) },
+    )
+  }
+
+  @PageAsQueryParam
   @GetMapping(ROUTE_BOOKS_LATEST)
   fun getLatestBooks(
     @AuthenticationPrincipal principal: KomgaPrincipal,
@@ -421,6 +464,31 @@ class OpdsController(
           *linkPage(uriBuilder, bookPage).toTypedArray(),
         ),
       entries = bookPage.content.getEntriesWithSeriesTitle(),
+    )
+  }
+
+  @PageAsQueryParam
+  @GetMapping(ROUTE_BOOKS_LATEST_LIBRARIES)
+  fun getLatestBooksByLibraries(
+    @AuthenticationPrincipal principal: KomgaPrincipal,
+  ): OpdsFeed {
+    val libraries =
+      if (principal.user.sharedAllLibraries) {
+        libraryRepository.findAll()
+      } else {
+        libraryRepository.findAllByIds(principal.user.sharedLibrariesIds)
+      }
+    return OpdsFeedNavigation(
+      id = ID_BOOKS_LATEST_LIBRARIES,
+      title = "Latest books by libraries",
+      updated = ZonedDateTime.now(),
+      author = komgaAuthor,
+      links =
+        listOf(
+          OpdsLinkFeedNavigation(OpdsLinkRel.SELF, uriBuilder(ROUTE_BOOKS_LATEST_LIBRARIES).toUriString()),
+          linkStart(),
+        ),
+      entries = libraries.map { it.toLatestOpdsEntry(ID_BOOKS_LATEST_LIBRARIES, "Latest books", ROUTE_BOOKS_LATEST_LIBRARIES) },
     )
   }
 
@@ -710,6 +778,87 @@ class OpdsController(
       )
     } ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
 
+  @PageAsQueryParam
+  @GetMapping("series/latest-library/{id}")
+  fun getLatestSeriesForLibrary(
+    @AuthenticationPrincipal principal: KomgaPrincipal,
+    @PathVariable id: String,
+    @Parameter(hidden = true) page: Pageable,
+  ): OpdsFeed =
+    libraryRepository.findByIdOrNull(id)?.let { library ->
+      if (!principal.user.canAccessLibrary(library)) throw ResponseStatusException(HttpStatus.FORBIDDEN)
+
+      val seriesSearch =
+        SeriesSearchWithReadProgress(
+          libraryIds = setOf(library.id),
+          deleted = false,
+        )
+
+      val pageable = PageRequest.of(page.pageNumber, page.pageSize, Sort.by(Sort.Order.desc("lastModified")))
+
+      val seriesPage =
+        seriesDtoRepository.findAllRecentlyUpdated(
+          seriesSearch,
+          principal.user.id,
+          principal.user.restrictions,
+          pageable,
+        )
+
+      val uriBuilder = uriBuilder("$ROUTE_SERIES_LATEST_LIBRARIES/$id")
+
+      return OpdsFeedNavigation(
+        id = "${ID_SERIES_LATEST_LIBRARIES}_${library.id}",
+        title = "${library.name} - Latest series",
+        updated = ZonedDateTime.now(),
+        author = komgaAuthor,
+        links =
+          listOf(
+            OpdsLinkFeedNavigation(OpdsLinkRel.SELF, uriBuilder.toUriString()),
+            linkStart(),
+            *linkPage(uriBuilder, seriesPage).toTypedArray(),
+          ),
+        entries = seriesPage.content.map { it.toOpdsEntry() },
+      )
+    } ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+
+  @PageAsQueryParam
+  @GetMapping("books/latest-library/{id}")
+  fun getLatestBooksForLibrary(
+    @AuthenticationPrincipal principal: KomgaPrincipal,
+    @PathVariable id: String,
+    @Parameter(hidden = true) page: Pageable,
+  ): OpdsFeed =
+    libraryRepository.findByIdOrNull(id)?.let { library ->
+      if (!principal.user.canAccessLibrary(library)) throw ResponseStatusException(HttpStatus.FORBIDDEN)
+
+      val bookSearch =
+        BookSearchWithReadProgress(
+          libraryIds = setOf(library.id),
+          mediaStatus = setOf(Media.Status.READY),
+          deleted = false,
+        )
+
+      val pageable = PageRequest.of(page.pageNumber, page.pageSize, Sort.by(Sort.Order.desc("createdDate")))
+
+      val bookPage = bookDtoRepository.findAll(bookSearch, principal.user.id, pageable, principal.user.restrictions)
+
+      val uriBuilder = uriBuilder("$ROUTE_BOOKS_LATEST_LIBRARIES/$id")
+
+      return OpdsFeedAcquisition(
+        id = "${ID_BOOKS_LATEST_LIBRARIES}_${library.id}",
+        title = "${library.name} - Latest books",
+        updated = ZonedDateTime.now(),
+        author = komgaAuthor,
+        links =
+          listOf(
+            OpdsLinkFeedNavigation(OpdsLinkRel.SELF, uriBuilder.toUriString()),
+            linkStart(),
+            *linkPage(uriBuilder, bookPage).toTypedArray(),
+          ),
+        entries = bookPage.content.getEntriesWithSeriesTitle(),
+      )
+    } ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+
   @ApiResponse(content = [Content(schema = Schema(type = "string", format = "binary"))])
   @GetMapping(
     value = ["books/{bookId}/thumbnail/small"],
@@ -807,6 +956,19 @@ class OpdsController(
       id = id,
       content = "",
       link = OpdsLinkFeedNavigation(OpdsLinkRel.SUBSECTION, uriBuilder("libraries/$id").toUriString()),
+    )
+
+  private fun Library.toLatestOpdsEntry(
+    idPrefix: String,
+    nameSuffix: String,
+    routePrefix: String,
+  ): OpdsEntryNavigation =
+    OpdsEntryNavigation(
+      title = "$name - $nameSuffix",
+      updated = lastModifiedDate.atZone(ZoneId.systemDefault()) ?: ZonedDateTime.now(),
+      id = "${idPrefix}_$id",
+      content = "",
+      link = OpdsLinkFeedNavigation(OpdsLinkRel.SUBSECTION, uriBuilder("$routePrefix/$id").toUriString()),
     )
 
   private fun SeriesCollection.toOpdsEntry(): OpdsEntryNavigation =
