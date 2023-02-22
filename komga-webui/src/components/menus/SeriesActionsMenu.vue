@@ -22,6 +22,9 @@
         <v-list-item @click="markUnread" v-if="!isUnread">
           <v-list-item-title>{{ $t('menu.mark_unread') }}</v-list-item-title>
         </v-list-item>
+        <v-list-item :href="fileUrl" v-if="canDownload">
+          <v-list-item-title>{{ $t('menu.download_series') }}</v-list-item-title>
+        </v-list-item>
         <v-list-item @click="promptDeleteSeries" class="list-danger" v-if="isAdmin">
           <v-list-item-title>{{ $t('menu.delete') }}</v-list-item-title>
         </v-list-item>
@@ -32,6 +35,7 @@
 <script lang="ts">
 import Vue from 'vue'
 import {SeriesDto} from '@/types/komga-series'
+import {seriesFileUrl} from '@/functions/urls'
 
 export default Vue.extend({
   name: 'SeriesActionsMenu',
@@ -64,6 +68,15 @@ export default Vue.extend({
     },
     isUnread(): boolean {
       return this.series.booksUnreadCount === this.series.booksCount
+    },
+    unavailable(): boolean {
+      return this.series.deleted || this.$store.getters.getLibraryById(this.series.libraryId).unavailable
+    },
+    canDownload(): boolean {
+      return this.$store.getters.meFileDownload && !this.unavailable
+    },
+    fileUrl(): string {
+      return seriesFileUrl(this.series.id)
     },
   },
   methods: {
