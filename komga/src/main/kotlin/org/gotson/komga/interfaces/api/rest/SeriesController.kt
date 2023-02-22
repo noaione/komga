@@ -38,6 +38,7 @@ import org.gotson.komga.domain.persistence.SeriesCollectionRepository
 import org.gotson.komga.domain.persistence.SeriesMetadataRepository
 import org.gotson.komga.domain.persistence.SeriesRepository
 import org.gotson.komga.domain.persistence.ThumbnailSeriesRepository
+import org.gotson.komga.domain.persistence.MediaRepository
 import org.gotson.komga.domain.service.BookLifecycle
 import org.gotson.komga.domain.service.SeriesLifecycle
 import org.gotson.komga.infrastructure.image.ImageAnalyzer
@@ -49,6 +50,7 @@ import org.gotson.komga.infrastructure.swagger.PageableAsQueryParam
 import org.gotson.komga.infrastructure.swagger.PageableWithoutSortAsQueryParam
 import org.gotson.komga.infrastructure.web.Authors
 import org.gotson.komga.infrastructure.web.DelimitedPair
+import org.gotson.komga.infrastructure.web.getMediaTypeOrDefault
 import org.gotson.komga.interfaces.api.checkContentRestriction
 import org.gotson.komga.interfaces.api.persistence.BookDtoRepository
 import org.gotson.komga.interfaces.api.persistence.ReadProgressDtoRepository
@@ -90,10 +92,12 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
+import java.io.FileNotFoundException
 import java.io.OutputStream
 import java.net.URI
 import java.nio.charset.StandardCharsets.UTF_8
 import java.util.zip.Deflater
+import kotlin.io.path.name
 
 private val logger = KotlinLogging.logger {}
 
@@ -108,6 +112,7 @@ class SeriesController(
   private val bookLifecycle: BookLifecycle,
   private val bookRepository: BookRepository,
   private val bookDtoRepository: BookDtoRepository,
+  private val mediaRepository: MediaRepository,
   private val collectionRepository: SeriesCollectionRepository,
   private val readProgressDtoRepository: ReadProgressDtoRepository,
   private val eventPublisher: ApplicationEventPublisher,
@@ -654,38 +659,70 @@ class SeriesController(
 
     val books = bookRepository.findAllBySeriesId(seriesId)
 
-    val streamingResponse = StreamingResponseBody { responseStream: OutputStream ->
-      ZipArchiveOutputStream(responseStream).use { zipStream ->
-        zipStream.setMethod(ZipArchiveOutputStream.DEFLATED)
-        zipStream.setLevel(Deflater.NO_COMPRESSION)
-        zipStream.setUseZip64(Zip64Mode.Always)
-        books.forEach { book ->
-          val file = FileSystemResource(book.path)
-          if (!file.exists()) {
-            logger.warn { "Book file not found, skipping archive entry: ${file.path}" }
-            return@forEach
-          }
+    val firstBook = books.firstOrNull() ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
 
-          logger.debug { "Adding file to zip archive: ${file.path}" }
-          file.inputStream.use {
-            zipStream.putArchiveEntry(ZipArchiveEntry(file.filename))
-            IOUtils.copyLarge(it, zipStream, ByteArray(8192))
-            zipStream.closeArchiveEntry()
-          }
+    var responseBody: ResponseEntity<StreamingResponseBody>
+    if (firstBook.oneshot) {
+      principal.user.checkContentRestriction(firstBook.seriesId)
+      val media = mediaRepository.findById(firstBook.id)
+      val file = FileSystemResource(firstBook.path)
+      if (!file.exists()) {
+        logger.warn { "Book file not found, returning empty response: ${firstBook.path}" }
+        throw ResponseStatusException(HttpStatus.NOT_FOUND, "File not found, it may have moved")
+      }
+      val streamingResponse = StreamingResponseBody { os: OutputStream ->
+        file.inputStream.use {
+          IOUtils.copyLarge(it, os, ByteArray(8192))
+          os.close()
         }
       }
-    }
+      responseBody = ResponseEntity.ok()
+        .headers(
+          HttpHeaders().apply {
+            contentDisposition = ContentDisposition.builder("attachment")
+              .filename(firstBook.path.name, UTF_8)
+              .build()
+          },
+        )
+        .contentType(getMediaTypeOrDefault(media.mediaType))
+        .contentLength(file.contentLength())
+        .body(streamingResponse)
+    } else {
+      val streamingResponse = StreamingResponseBody { responseStream: OutputStream ->
+        ZipArchiveOutputStream(responseStream).use { zipStream ->
+          zipStream.setMethod(ZipArchiveOutputStream.DEFLATED)
+          zipStream.setLevel(Deflater.NO_COMPRESSION)
+          zipStream.setUseZip64(Zip64Mode.Always)
+          books.forEach { book ->
+              val file = FileSystemResource(book.path)
+              if (!file.exists()) {
+                logger.warn { "Book file not found, skipping archive entry: ${file.path}" }
+                return@forEach
+              }
 
-    return ResponseEntity.ok()
-      .headers(
-        HttpHeaders().apply {
-          contentDisposition = ContentDisposition.builder("attachment")
-            .filename(seriesMetadataRepository.findById(seriesId).title + ".zip", UTF_8)
-            .build()
-        },
-      )
-      .contentType(MediaType.parseMediaType(ZIP.type))
-      .body(streamingResponse)
+              logger.debug { "Adding file to zip archive: ${file.path}" }
+              file.inputStream.use {
+                zipStream.putArchiveEntry(ZipArchiveEntry(file.filename))
+                IOUtils.copyLarge(it, zipStream, ByteArray(8192))
+                zipStream.closeArchiveEntry()
+              }
+            }
+          }
+        }
+
+      responseBody = ResponseEntity.ok()
+        .headers(
+          HttpHeaders().apply {
+            contentDisposition = ContentDisposition.builder("attachment")
+              .filename(seriesMetadataRepository.findById(seriesId).title + ".zip", UTF_8)
+              .build()
+          },
+        )
+        .contentType(MediaType.parseMediaType(ZIP.type))
+        .body(streamingResponse)
+      }
+
+    return responseBody
   }
 
   @DeleteMapping("v1/series/{seriesId}/file")
