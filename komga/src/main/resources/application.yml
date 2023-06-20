@@ -1,4 +1,5 @@
 application.version: ${version}
+application.forkrevision: ${forkrevision}
 
 logging:
   logback:

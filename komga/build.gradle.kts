@@ -160,6 +160,16 @@ tasks {
     enabled = true
   }
 
+  getByName<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
+    var forkRevision = providers.gradleProperty("forkrevision").getOrNull()
+    if (forkRevision != null) {
+      var archiveFn = archiveFileName.get()
+      val archiveExt = archiveExtension.get()
+      archiveFn = archiveFn.replace(".$archiveExt", "-nao$forkRevision.$archiveExt")
+      archiveFileName.set(archiveFn)
+    }
+  }
+
   register<Exec>("npmInstall") {
     group = "web"
     workingDir(webui)
