@@ -1,8 +1,9 @@
- ____  __.
-|    |/ _|____   _____    _________
-|      < /  _ \ /     \  / ___\__  \
-|    |  (  <_> )  Y Y  \/ /_/  > __ \_
-|____|__ \____/|__|_|  /\___  (____  /
-        \/           \//_____/     \/
+${AnsiColor.BLUE} ____  __.
+${AnsiColor.BLUE}|    |/ _|____   _____    _________
+${AnsiColor.BLUE}|      < /  ${AnsiColor.RED}_${AnsiColor.BLUE} \ /     \  / ___\__  \
+${AnsiColor.BLUE}|    |  (  ${AnsiColor.RED}<_>${AnsiColor.BLUE} )  Y Y  \/ /_/  > __ \_
+${AnsiColor.BLUE}|____|__ \____/|__|_|  /\___  (____  /
+${AnsiColor.BLUE}        \/           \//_____/     \/
 
 Version: ${application.version}
+Forked Version: nao r${application.forkrevision}

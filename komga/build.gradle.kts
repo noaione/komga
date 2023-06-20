@@ -181,8 +181,17 @@ tasks {
     enabled = true
   }
 
-  register<Sync>("webuiCopyDist") {
-    description = "Copies the WebUI build into resources/public"
+  getByName<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
+    var forkRevision = providers.gradleProperty("forkrevision").getOrNull()
+    if (forkRevision != null) {
+      var archiveFn = archiveFileName.get()
+      val archiveExt = archiveExtension.get()
+      archiveFn = archiveFn.replace(".$archiveExt", "-nao$forkRevision.$archiveExt")
+      archiveFileName.set(archiveFn)
+    }
+  }
+
+  register<Exec>("webuiCopyDist") {
     group = "web"
     from("$webui/dist/")
     into("$projectDir/src/main/resources/public/")
