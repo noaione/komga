@@ -187,7 +187,26 @@ class TaskEmitter(
   }
 
   fun fixThumbnailsWithoutMetadata(priority: Int = DEFAULT_PRIORITY) {
-    submitTask(Task.FixThumbnailsWithoutMetadata(priority))
+    submitTask(Task.FixThumbnailsBooksWithoutMetadata(priority))
+    submitTask(Task.FixThumbnailsSeriesWithoutMetadata(priority))
+    submitTask(Task.FixThumbnailsSeriesCollectionsWithoutMetadata(priority))
+    submitTask(Task.FixThumbnailsReadListsWithoutMetadata(priority))
+  }
+
+  fun fixThumbnailsBooksWithoutMetadata(priority: Int = DEFAULT_PRIORITY) {
+    submitTask(Task.FixThumbnailsBooksWithoutMetadata(priority))
+  }
+
+  fun fixThumbnailsSeriesWithoutMetadata(priority: Int = DEFAULT_PRIORITY) {
+    submitTask(Task.FixThumbnailsSeriesWithoutMetadata(priority))
+  }
+
+  fun fixThumbnailsSeriesCollectionsWithoutMetadata(priority: Int = DEFAULT_PRIORITY) {
+    submitTask(Task.FixThumbnailsSeriesCollectionsWithoutMetadata(priority))
+  }
+
+  fun fixThumbnailsReadListsWithoutMetadata(priority: Int = DEFAULT_PRIORITY) {
+    submitTask(Task.FixThumbnailsReadListsWithoutMetadata(priority))
   }
 
   fun findBookThumbnailsToRegenerate(forBiggerResultOnly: Boolean, priority: Int = DEFAULT_PRIORITY) {
