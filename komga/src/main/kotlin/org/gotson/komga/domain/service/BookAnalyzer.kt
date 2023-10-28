@@ -5,18 +5,12 @@ import org.gotson.komga.domain.model.Book
 import org.gotson.komga.domain.model.BookPage
 import org.gotson.komga.domain.model.BookPageContent
 import org.gotson.komga.domain.model.BookWithMedia
-import org.gotson.komga.domain.model.Dimension
 import org.gotson.komga.domain.model.Media
 import org.gotson.komga.domain.model.MediaNotReadyException
 import org.gotson.komga.domain.model.MediaUnsupportedException
-import org.gotson.komga.domain.model.ThumbnailBook
-import org.gotson.komga.infrastructure.configuration.KomgaSettingsProvider
 import org.gotson.komga.infrastructure.hash.Hasher
-import org.gotson.komga.infrastructure.image.ImageAnalyzer
-import org.gotson.komga.infrastructure.image.ImageConverter
 import org.gotson.komga.infrastructure.image.ImageType
 import org.gotson.komga.infrastructure.mediacontainer.ContentDetector
-import org.gotson.komga.infrastructure.mediacontainer.CoverExtractor
 import org.gotson.komga.infrastructure.mediacontainer.MediaContainerExtractor
 import org.gotson.komga.infrastructure.mediacontainer.MediaContainerRawExtractor
 import org.springframework.beans.factory.annotation.Value
@@ -32,17 +26,14 @@ private val logger = KotlinLogging.logger {}
 class BookAnalyzer(
   private val contentDetector: ContentDetector,
   extractors: List<MediaContainerExtractor>,
-  private val imageConverter: ImageConverter,
-  private val imageAnalyzer: ImageAnalyzer,
   private val hasher: Hasher,
   @Value("#{@komgaProperties.pageHashing}") private val pageHashing: Int,
-  private val komgaSettingsProvider: KomgaSettingsProvider,
-  private val thumbnailType: ImageType,
 ) {
 
   val supportedMediaTypes = extractors
     .flatMap { e -> e.mediaTypes().map { it to e } }
     .toMap()
+
   fun analyze(book: Book, analyzeDimensions: Boolean): Media {
     logger.info { "Trying to analyze book: $book" }
     try {
@@ -95,47 +86,6 @@ class BookAnalyzer(
       logger.error(ex) { "Error while analyzing book: $book" }
       return Media(status = Media.Status.ERROR, comment = "ERR_1005", bookId = book.id)
     }
-  }
-
-  @Throws(MediaNotReadyException::class)
-  fun generateThumbnail(book: BookWithMedia): ThumbnailBook {
-    logger.info { "Generate thumbnail for book: $book" }
-
-    if (book.media.status != Media.Status.READY) {
-      logger.warn { "Book media is not ready, cannot generate thumbnail. Book: $book" }
-      throw MediaNotReadyException()
-    }
-
-    val thumbnail = try {
-      val extractor = supportedMediaTypes.getValue(book.media.mediaType!!)
-      // try to get the cover from a CoverExtractor first
-      var coverBytes: ByteArray? = if (extractor is CoverExtractor) {
-        try {
-          extractor.getCoverStream(book.book.path)
-        } catch (e: Exception) {
-          logger.warn(e) { "Error while extracting cover. Falling back to first page. Book: $book" }
-          null
-        }
-      } else null
-      // if no cover could be found, get the first page
-      if (coverBytes == null) coverBytes = extractor.getEntryStream(book.book.path, book.media.pages.first().fileName)
-
-      coverBytes.let { cover ->
-        imageConverter.resizeImageToByteArray(cover, thumbnailType, komgaSettingsProvider.thumbnailSize.maxEdge)
-      }
-    } catch (ex: Exception) {
-      logger.warn(ex) { "Could not generate thumbnail for book: $book" }
-      null
-    }
-
-    return ThumbnailBook(
-      thumbnail = thumbnail,
-      type = ThumbnailBook.Type.GENERATED,
-      bookId = book.book.id,
-      mediaType = thumbnailType.mediaType,
-      dimension = thumbnail?.let { imageAnalyzer.getDimension(it.inputStream()) } ?: Dimension(0, 0),
-      fileSize = thumbnail?.size?.toLong() ?: 0,
-    )
   }
 
   @Throws(

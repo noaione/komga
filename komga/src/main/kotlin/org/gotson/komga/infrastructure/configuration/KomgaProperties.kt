@@ -66,6 +66,8 @@ class KomgaProperties {
 
   var lucene = Lucene()
 
+  var thumbnailGeneration = ThumbnailGeneration()
+
   var configDir: String? = null
 
   @Positive
@@ -130,5 +132,17 @@ class KomgaProperties {
 
       var preserveOriginal: Boolean = true
     }
+  }
+
+  class ThumbnailGeneration {
+    @get:Positive
+    var height: Int = 300
+
+    var saveMode = ThumbnailSaveMode.MEMORY
+
+    // Where to save thumbnails when using DISK mode, defaults to ${configDir}/thumbnails
+    var diskDirectory: String? = null
+
+    var skipRenaming: Boolean = false
   }
 }
