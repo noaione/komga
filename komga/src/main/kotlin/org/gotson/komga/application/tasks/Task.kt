@@ -243,6 +243,38 @@ sealed class Task(
     override fun toString(): String = "FixThumbnailsWithoutMetadata(priority='$priority')"
   }
 
+  class FixThumbnailsBooksWithoutMetadata(
+    priority: Int = DEFAULT_PRIORITY
+  ) : Task(priority, "FixThumbnailsBooksWithoutMetadata") {
+    override val uniqueId = "FIX_THUMBNAILS_BOOKS_WITHOUT_METADATA_${LocalDateTime.now()}"
+
+    override fun toString(): String = "FixThumbnailsBooksWithoutMetadata(priority='$priority')"
+  }
+
+  class FixThumbnailsSeriesWithoutMetadata(
+    priority: Int = DEFAULT_PRIORITY
+  ) : Task(priority, "FixThumbnailsSeriesWithoutMetadata") {
+    override val uniqueId = "FIX_THUMBNAILS_SERIES_WITHOUT_METADATA_${LocalDateTime.now()}"
+
+    override fun toString(): String = "FixThumbnailsSeriesWithoutMetadata(priority='$priority')"
+  }
+
+  class FixThumbnailsSeriesCollectionsWithoutMetadata(
+    priority: Int = DEFAULT_PRIORITY
+  ) : Task(priority, "FixThumbnailsSeriesCollectionsWithoutMetadata") {
+    override val uniqueId = "FIX_THUMBNAILS_SERIES_COLLECTIONS_WITHOUT_METADATA_${LocalDateTime.now()}"
+
+    override fun toString(): String = "FixThumbnailsSeriesCollectionsWithoutMetadata(priority='$priority')"
+  }
+
+  class FixThumbnailsReadListsWithoutMetadata(
+    priority: Int = DEFAULT_PRIORITY
+  ) : Task(priority, "FixThumbnailsReadListsWithoutMetadata") {
+    override val uniqueId = "FIX_THUMBNAILS_READ_LISTS_WITHOUT_METADATA_${LocalDateTime.now()}"
+
+    override fun toString(): String = "FixThumbnailsReadListsWithoutMetadata(priority='$priority')"
+  }
+
   class FindBookThumbnailsToRegenerate(
     val forBiggerResultOnly: Boolean,
     priority: Int = DEFAULT_PRIORITY,

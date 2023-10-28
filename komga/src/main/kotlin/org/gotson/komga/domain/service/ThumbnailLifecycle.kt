@@ -42,7 +42,7 @@ class ThumbnailLifecycle(
    */
   fun fixThumbnailsMetadata(): Boolean = fixThumbnailMetadataBook() || fixThumbnailMetadataSeries() || fixThumbnailMetadataCollection() || fixThumbnailMetadataReadList()
 
-  private fun fixThumbnailMetadataBook(): Boolean =
+  fun fixThumbnailMetadataBook(): Boolean =
     fixThumbnailMetadata(
       ThumbnailBook::class,
       thumbnailBookRepository::findAllWithoutMetadata,
@@ -63,7 +63,7 @@ class ThumbnailLifecycle(
       thumbnailBookRepository::updateMetadata,
     )
 
-  private fun fixThumbnailMetadataSeries(): Boolean =
+  fun fixThumbnailMetadataSeries(): Boolean =
     fixThumbnailMetadata(
       ThumbnailSeries::class,
       thumbnailSeriesRepository::findAllWithoutMetadata,
@@ -84,7 +84,7 @@ class ThumbnailLifecycle(
       thumbnailSeriesRepository::updateMetadata,
     )
 
-  private fun fixThumbnailMetadataCollection(): Boolean =
+  fun fixThumbnailMetadataCollection(): Boolean =
     fixThumbnailMetadata(
       ThumbnailSeriesCollection::class,
       thumbnailCollection::findAllWithoutMetadata,
@@ -99,7 +99,7 @@ class ThumbnailLifecycle(
       thumbnailCollection::updateMetadata,
     )
 
-  private fun fixThumbnailMetadataReadList(): Boolean =
+  fun fixThumbnailMetadataReadList(): Boolean =
     fixThumbnailMetadata(
       ThumbnailReadList::class,
       thumbnailReadListRepository::findAllWithoutMetadata,

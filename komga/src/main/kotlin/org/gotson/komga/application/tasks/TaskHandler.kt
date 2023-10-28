@@ -185,6 +185,26 @@ class TaskHandler(
               taskEmitter.fixThumbnailsWithoutMetadata(LOWEST_PRIORITY)
           }
 
+          is Task.FixThumbnailsBooksWithoutMetadata -> {
+            if (thumbnailLifecycle.fixThumbnailMetadataBook())
+              taskEmitter.fixThumbnailsBooksWithoutMetadata(LOWEST_PRIORITY)
+          }
+
+          is Task.FixThumbnailsSeriesWithoutMetadata -> {
+            if (thumbnailLifecycle.fixThumbnailMetadataSeries())
+              taskEmitter.fixThumbnailsSeriesWithoutMetadata(LOWEST_PRIORITY)
+          }
+
+          is Task.FixThumbnailsSeriesCollectionsWithoutMetadata -> {
+            if (thumbnailLifecycle.fixThumbnailMetadataCollection())
+              taskEmitter.fixThumbnailsSeriesCollectionsWithoutMetadata(LOWEST_PRIORITY)
+          }
+
+          is Task.FixThumbnailsReadListsWithoutMetadata -> {
+            if (thumbnailLifecycle.fixThumbnailMetadataReadList())
+              taskEmitter.fixThumbnailsReadListsWithoutMetadata(LOWEST_PRIORITY)
+          }
+
           is Task.FindBookThumbnailsToRegenerate -> {
             taskEmitter.generateBookThumbnail(bookLifecycle.findBookThumbnailsToRegenerate(task.forBiggerResultOnly), task.priority)
           }
