@@ -27,6 +27,8 @@ class KomgaProperties {
 
   var findDuplicatePages: Boolean = true
 
+  var thumbnailMetadataStartupFix: Boolean = true
+
   @Positive
   var pageHashing: Int = 3
 
