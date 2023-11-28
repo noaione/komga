@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank
 import org.gotson.komga.domain.model.KomgaUser
 import org.gotson.komga.domain.model.UserRoles
 import org.gotson.komga.domain.service.KomgaUserLifecycle
+import org.gotson.komga.infrastructure.configuration.KomgaProperties
 import org.gotson.komga.interfaces.api.rest.dto.UserDto
 import org.gotson.komga.interfaces.api.rest.dto.toDto
 import org.springframework.http.HttpStatus
@@ -22,6 +23,7 @@ import org.springframework.web.server.ResponseStatusException
 @Validated
 class ClaimController(
   private val userDetailsLifecycle: KomgaUserLifecycle,
+  private val komgaProperties: KomgaProperties,
 ) {
   @GetMapping
   fun getClaimStatus() = ClaimStatus(userDetailsLifecycle.countUsers() > 0)
@@ -45,7 +47,7 @@ class ClaimController(
           password = password,
           roles = UserRoles.entries.toSet(),
         ),
-      ).toDto()
+      ).toDto(komgaProperties.thumbnailGeneration.saveMode)
   }
 
   data class ClaimStatus(

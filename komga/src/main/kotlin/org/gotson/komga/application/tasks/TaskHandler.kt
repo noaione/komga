@@ -21,6 +21,7 @@ import org.gotson.komga.infrastructure.search.SearchIndexLifecycle
 import org.gotson.komga.interfaces.scheduler.METER_TASKS_EXECUTION
 import org.gotson.komga.interfaces.scheduler.METER_TASKS_FAILURE
 import org.springframework.stereotype.Service
+import java.net.URL
 import java.nio.file.Paths
 import kotlin.time.measureTime
 import kotlin.time.toJavaDuration
@@ -43,8 +44,8 @@ class TaskHandler(
   private val bookConverter: BookConverter,
   private val bookPageEditor: BookPageEditor,
   private val searchIndexLifecycle: SearchIndexLifecycle,
-  private val pageHashLifecycle: PageHashLifecycle,
   private val thumbnailLifecycle: ThumbnailLifecycle,
+  private val pageHashLifecycle: PageHashLifecycle,
   private val meterRegistry: MeterRegistry,
 ) {
   fun handleTask(task: Task) {
@@ -178,6 +179,8 @@ class TaskHandler(
 
           is Task.UpgradeIndex -> searchIndexLifecycle.upgradeIndex()
 
+          is Task.MoveGeneratedThumbnails -> thumbnailLifecycle.moveGeneratedThumbnails()
+
           is Task.DeleteBook -> {
             bookRepository.findByIdOrNull(task.bookId)?.let { book ->
               if (book.oneshot)
@@ -221,6 +224,14 @@ class TaskHandler(
           is Task.FindBookThumbnailsToRegenerate -> {
             taskEmitter.generateBookThumbnail(bookLifecycle.findBookThumbnailsToRegenerate(task.forBiggerResultOnly), task.priority)
           }
+
+          is Task.DeleteThumbnail -> {
+            thumbnailLifecycle.deleteThumbnailFromDisk(
+              ThumbnailLifecycle.Thumbnail(task.thumbId, task.itemId, task.type, URL("file://temporaryThumb").toURI()),
+            )
+          }
+
+          is Task.RenameDiskThumbnails -> thumbnailLifecycle.renameDiskThumbnailsFormatting()
         }
       }.also {
         logger.info { "Task $task executed in $it" }

@@ -12,6 +12,7 @@ import org.gotson.komga.domain.persistence.AuthenticationActivityRepository
 import org.gotson.komga.domain.persistence.KomgaUserRepository
 import org.gotson.komga.domain.persistence.LibraryRepository
 import org.gotson.komga.domain.service.KomgaUserLifecycle
+import org.gotson.komga.infrastructure.configuration.KomgaProperties
 import org.gotson.komga.infrastructure.jooq.UnpagedSorted
 import org.gotson.komga.infrastructure.security.KomgaPrincipal
 import org.gotson.komga.interfaces.api.rest.dto.ApiKeyDto
@@ -54,6 +55,7 @@ class UserController(
   private val userRepository: KomgaUserRepository,
   private val libraryRepository: LibraryRepository,
   private val authenticationActivityRepository: AuthenticationActivityRepository,
+  private val komgaProperties: KomgaProperties,
   env: Environment,
 ) {
   private val demo = env.activeProfiles.contains("demo")
@@ -61,7 +63,8 @@ class UserController(
   @GetMapping("me")
   fun getMe(
     @AuthenticationPrincipal principal: KomgaPrincipal,
-  ): UserDto = principal.toDto()
+  ): UserDto =
+    principal.toDto(komgaProperties.thumbnailGeneration.saveMode)
 
   @PatchMapping("me/password")
   @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -78,7 +81,8 @@ class UserController(
 
   @GetMapping
   @PreAuthorize("hasRole('ADMIN')")
-  fun getAll(): List<UserDto> = userRepository.findAll().map { it.toDto() }
+  fun getAll(): List<UserDto> =
+    userRepository.findAll().map { it.toDto(komgaProperties.thumbnailGeneration.saveMode) }
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
@@ -88,7 +92,7 @@ class UserController(
     newUser: UserCreationDto,
   ): UserDto =
     try {
-      userLifecycle.createUser(newUser.toDomain()).toDto()
+      userLifecycle.createUser(newUser.toDomain()).toDto(komgaProperties.thumbnailGeneration.saveMode)
     } catch (e: UserEmailAlreadyExistsException) {
       throw ResponseStatusException(HttpStatus.BAD_REQUEST, "A user with this email already exists")
     }

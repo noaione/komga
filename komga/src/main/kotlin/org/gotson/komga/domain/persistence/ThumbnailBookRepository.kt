@@ -23,6 +23,10 @@ interface ThumbnailBookRepository {
     size: Int,
   ): Collection<String>
 
+  fun findAllByType(type: ThumbnailBook.Type): Collection<ThumbnailBook>
+
+  fun findAllDiskThumbnail(): Collection<ThumbnailBook>
+
   fun existsById(thumbnailId: String): Boolean
 
   fun insert(thumbnail: ThumbnailBook)

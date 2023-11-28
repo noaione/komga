@@ -193,6 +193,12 @@ class SeriesLifecycle(
 
       readProgressRepository.deleteBySeriesIds(seriesIds)
       collectionRepository.removeSeriesFromAll(seriesIds)
+      seriesIds.forEach { seriesId ->
+        val thumbnails = thumbnailsSeriesRepository.findAllBySeriesId(seriesId)
+        thumbnails.forEach {
+          taskEmitter.deleteThumbnail(it.id, it.seriesId, ThumbnailLifecycle.Type.SERIES)
+        }
+      }
       thumbnailsSeriesRepository.deleteBySeriesIds(seriesIds)
       seriesMetadataRepository.delete(seriesIds)
       bookMetadataAggregationRepository.delete(seriesIds)
@@ -323,6 +329,7 @@ class SeriesLifecycle(
   fun deleteThumbnailForSeries(thumbnail: ThumbnailSeries) {
     require(thumbnail.type == ThumbnailSeries.Type.USER_UPLOADED) { "Only uploaded thumbnails can be deleted" }
     thumbnailsSeriesRepository.delete(thumbnail.id)
+    taskEmitter.deleteThumbnail(thumbnail.id, thumbnail.seriesId, ThumbnailLifecycle.Type.SERIES)
     eventPublisher.publishEvent(DomainEvent.ThumbnailSeriesDeleted(thumbnail))
   }
 
@@ -343,6 +350,10 @@ class SeriesLifecycle(
       if (it.deleteIfExists()) logger.info { "Deleted file: $it" }
     }
 
+    thumbnailsSeriesRepository.findAllBySeriesIdIdAndType(series.id, ThumbnailSeries.Type.USER_UPLOADED)
+      .filter { it.url != null }
+      .forEach { taskEmitter.deleteThumbnail(it.id, it.seriesId, ThumbnailLifecycle.Type.BOOK) }
+
     if (series.path.exists() && series.path.listDirectoryEntries().isEmpty())
       if (series.path.deleteIfExists()) {
         logger.info { "Deleted directory: ${series.path}" }
@@ -360,6 +371,7 @@ class SeriesLifecycle(
         .mapNotNull {
           if (!it.exists()) {
             logger.warn { "Thumbnail doesn't exist, removing entry" }
+            taskEmitter.deleteThumbnail(it.id, it.seriesId, ThumbnailLifecycle.Type.SERIES)
             thumbnailsSeriesRepository.delete(it.id)
             null
           } else {

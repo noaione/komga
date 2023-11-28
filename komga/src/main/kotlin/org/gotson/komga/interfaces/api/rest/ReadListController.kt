@@ -29,6 +29,7 @@ import org.gotson.komga.domain.persistence.ReadListRepository
 import org.gotson.komga.domain.persistence.ThumbnailReadListRepository
 import org.gotson.komga.domain.service.BookLifecycle
 import org.gotson.komga.domain.service.ReadListLifecycle
+import org.gotson.komga.domain.service.ThumbnailLifecycle
 import org.gotson.komga.infrastructure.image.ImageAnalyzer
 import org.gotson.komga.infrastructure.jooq.UnpagedSorted
 import org.gotson.komga.infrastructure.mediacontainer.ContentDetector
@@ -97,6 +98,7 @@ class ReadListController(
   private val imageAnalyzer: ImageAnalyzer,
   private val bookLifecycle: BookLifecycle,
   private val eventPublisher: ApplicationEventPublisher,
+  private val thumbnailLifecycle: ThumbnailLifecycle,
 ) {
   @PageableWithoutSortAsQueryParam
   @GetMapping
@@ -193,18 +195,33 @@ class ReadListController(
       if (!contentDetector.isImage(mediaType))
         throw ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
 
-      return readListLifecycle
-        .addThumbnail(
-          ThumbnailReadList(
-            readListId = readList.id,
-            thumbnail = file.bytes,
-            type = ThumbnailReadList.Type.USER_UPLOADED,
-            selected = selected,
-            fileSize = file.bytes.size.toLong(),
-            mediaType = mediaType,
-            dimension = imageAnalyzer.getDimension(file.inputStream.buffered()) ?: Dimension(0, 0),
-          ),
-        ).toDto()
+      val readListThumbUrl = thumbnailLifecycle
+        .saveThumbnailToDiskIfDiskMode(
+          file.bytes,
+          readList.id,
+          ThumbnailLifecycle.Type.READ_LIST
+        )
+      var thumbReadList =
+        ThumbnailReadList(
+          readListId = readList.id,
+          thumbnail = file.bytes,
+          type = ThumbnailReadList.Type.USER_UPLOADED,
+          selected = selected,
+          fileSize = file.bytes.size.toLong(),
+          mediaType = mediaType,
+          dimension = imageAnalyzer.getDimension(file.inputStream.buffered()) ?: Dimension(0, 0),
+        )
+
+      if (readListThumbUrl != null) {
+        thumbReadList =
+          thumbReadList.copy(
+            id = readListThumbUrl.id,
+            thumbnail = null,
+            url = readListThumbUrl.url.toURL(),
+          )
+      }
+
+      return readListLifecycle.addThumbnail(thumbReadList).toDto()
     } ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
   }
 
