@@ -9,6 +9,8 @@ interface ThumbnailReadListRepository {
   fun findSelectedByReadListIdOrNull(readListId: String): ThumbnailReadList?
   fun findAllByReadListId(readListId: String): Collection<ThumbnailReadList>
   fun findAllWithoutMetadata(pageable: Pageable): Page<ThumbnailReadList>
+  fun findAllByType(type: ThumbnailReadList.Type): Collection<ThumbnailReadList>
+  fun findAllDiskThumbnail(): Collection<ThumbnailReadList>
 
   fun insert(thumbnail: ThumbnailReadList)
   fun update(thumbnail: ThumbnailReadList)

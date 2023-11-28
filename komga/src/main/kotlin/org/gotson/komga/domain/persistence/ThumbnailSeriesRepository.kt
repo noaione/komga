@@ -10,10 +10,12 @@ interface ThumbnailSeriesRepository {
   fun findAllBySeriesId(seriesId: String): Collection<ThumbnailSeries>
   fun findAllBySeriesIdIdAndType(seriesId: String, type: ThumbnailSeries.Type): Collection<ThumbnailSeries>
   fun findAllWithoutMetadata(pageable: Pageable): Page<ThumbnailSeries>
+  fun findAllByType(type: ThumbnailSeries.Type): Collection<ThumbnailSeries>
+  fun findAllDiskThumbnail(): Collection<ThumbnailSeries>
 
   fun insert(thumbnail: ThumbnailSeries)
+  fun update(thumbnail: ThumbnailSeries)
   fun updateMetadata(thumbnails: Collection<ThumbnailSeries>)
-
   fun markSelected(thumbnail: ThumbnailSeries)
 
   fun delete(thumbnailSeriesId: String)

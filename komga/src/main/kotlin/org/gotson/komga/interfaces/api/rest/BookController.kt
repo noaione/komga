@@ -39,6 +39,7 @@ import org.gotson.komga.domain.persistence.SeriesMetadataRepository
 import org.gotson.komga.domain.persistence.ThumbnailBookRepository
 import org.gotson.komga.domain.service.BookAnalyzer
 import org.gotson.komga.domain.service.BookLifecycle
+import org.gotson.komga.domain.service.ThumbnailLifecycle
 import org.gotson.komga.infrastructure.image.ImageAnalyzer
 import org.gotson.komga.infrastructure.image.ImageType
 import org.gotson.komga.infrastructure.jooq.UnpagedSorted
@@ -123,6 +124,7 @@ class BookController(
   private val contentDetector: ContentDetector,
   private val imageAnalyzer: ImageAnalyzer,
   private val eventPublisher: ApplicationEventPublisher,
+  private val thumbnailLifecycle: ThumbnailLifecycle,
   private val thumbnailBookRepository: ThumbnailBookRepository,
   private val webPubGenerator: WebPubGenerator,
 ) {
@@ -336,16 +338,26 @@ class BookController(
     if (!contentDetector.isImage(mediaType))
       throw ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
 
+    val bookThumbData = thumbnailLifecycle.saveThumbnailToDiskIfDiskMode(file.bytes, book.id, ThumbnailLifecycle.Type.BOOK)
+    var thumbBook = ThumbnailBook(
+      bookId = book.id,
+      thumbnail = file.bytes,
+      type = ThumbnailBook.Type.USER_UPLOADED,
+      selected = selected,
+      fileSize = file.bytes.size.toLong(),
+      mediaType = mediaType,
+      dimension = imageAnalyzer.getDimension(file.inputStream.buffered()) ?: Dimension(0, 0),
+    )
+    if (bookThumbData != null) {
+      thumbBook = thumbBook.copy(
+        id = bookThumbData.id,
+        thumbnail = null,
+        url = bookThumbData.url.toURL(),
+      )
+    }
+
     return bookLifecycle.addThumbnailForBook(
-      ThumbnailBook(
-        bookId = book.id,
-        thumbnail = file.bytes,
-        type = ThumbnailBook.Type.USER_UPLOADED,
-        selected = selected,
-        fileSize = file.bytes.size.toLong(),
-        mediaType = mediaType,
-        dimension = imageAnalyzer.getDimension(file.inputStream.buffered()) ?: Dimension(0, 0),
-      ),
+      thumbBook,
       if (selected) MarkSelectedPreference.YES else MarkSelectedPreference.NO,
     ).toDto()
   }

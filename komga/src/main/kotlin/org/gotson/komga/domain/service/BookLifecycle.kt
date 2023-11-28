@@ -1,6 +1,7 @@
 package org.gotson.komga.domain.service
 
 import mu.KotlinLogging
+import org.gotson.komga.application.tasks.TaskEmitter
 import org.gotson.komga.domain.model.Book
 import org.gotson.komga.domain.model.BookAction
 import org.gotson.komga.domain.model.BookSearch
@@ -56,7 +57,9 @@ class BookLifecycle(
   private val bookAnalyzer: BookAnalyzer,
   private val imageConverter: ImageConverter,
   private val eventPublisher: ApplicationEventPublisher,
+  private val taskEmitter: TaskEmitter,
   private val transactionTemplate: TransactionTemplate,
+  private val thumbnailLifecycle: ThumbnailLifecycle,
   private val hasher: Hasher,
   private val historicalEventRepository: HistoricalEventRepository,
   private val komgaSettingsProvider: KomgaSettingsProvider,
@@ -116,7 +119,7 @@ class BookLifecycle(
   fun generateThumbnailAndPersist(book: Book) {
     logger.info { "Generate thumbnail and persist for book: $book" }
     try {
-      addThumbnailForBook(bookAnalyzer.generateThumbnail(BookWithMedia(book, mediaRepository.findById(book.id))), MarkSelectedPreference.IF_NONE_OR_GENERATED)
+      addThumbnailForBook(thumbnailLifecycle.generateThumbnail(BookWithMedia(book, mediaRepository.findById(book.id))), MarkSelectedPreference.IF_NONE_OR_GENERATED)
     } catch (ex: Exception) {
       logger.error(ex) { "Error while creating thumbnail" }
     }
@@ -126,6 +129,9 @@ class BookLifecycle(
     when (thumbnail.type) {
       ThumbnailBook.Type.GENERATED -> {
         // only one generated thumbnail is allowed
+        thumbnailBookRepository.findAllByBookIdAndType(thumbnail.bookId, ThumbnailBook.Type.GENERATED).forEach {
+          taskEmitter.deleteThumbnail(it.id, it.bookId, ThumbnailLifecycle.Type.BOOK)
+        }
         thumbnailBookRepository.deleteByBookIdAndType(thumbnail.bookId, ThumbnailBook.Type.GENERATED)
         thumbnailBookRepository.insert(thumbnail.copy(selected = false))
       }
@@ -166,6 +172,7 @@ class BookLifecycle(
   fun deleteThumbnailForBook(thumbnail: ThumbnailBook) {
     require(thumbnail.type == ThumbnailBook.Type.USER_UPLOADED) { "Only uploaded thumbnails can be deleted" }
     thumbnailBookRepository.delete(thumbnail.id)
+    taskEmitter.deleteThumbnail(thumbnail.id, thumbnail.bookId, ThumbnailLifecycle.Type.BOOK)
     thumbnailsHouseKeeping(thumbnail.bookId)
     eventPublisher.publishEvent(DomainEvent.ThumbnailBookDeleted(thumbnail))
   }
@@ -235,6 +242,7 @@ class BookLifecycle(
         if (!it.exists()) {
           logger.warn { "Thumbnail doesn't exist, removing entry" }
           thumbnailBookRepository.delete(it.id)
+          taskEmitter.deleteThumbnail(it.id, it.bookId, ThumbnailLifecycle.Type.BOOK)
           null
         } else it
       }
@@ -317,6 +325,9 @@ class BookLifecycle(
       readListRepository.removeBookFromAll(book.id)
 
       mediaRepository.delete(book.id)
+      thumbnailBookRepository.findByIdOrNull(book.id)?.let {
+        taskEmitter.deleteThumbnail(it.id, it.bookId, ThumbnailLifecycle.Type.BOOK)
+      }
       thumbnailBookRepository.deleteByBookId(book.id)
       bookMetadataRepository.delete(book.id)
 
@@ -343,6 +354,11 @@ class BookLifecycle(
       readListRepository.removeBooksFromAll(bookIds)
 
       mediaRepository.deleteByBookIds(bookIds)
+      bookIds.forEach { bookId ->
+        thumbnailBookRepository.findAllByBookId(bookId).forEach {
+          taskEmitter.deleteThumbnail(it.id, it.bookId, ThumbnailLifecycle.Type.BOOK)
+        }
+      }
       thumbnailBookRepository.deleteByBookIds(bookIds)
       bookMetadataRepository.delete(bookIds)
 
@@ -391,6 +407,14 @@ class BookLifecycle(
     thumbnails.forEach {
       if (it.deleteIfExists()) logger.info { "Deleted file: $it" }
     }
+
+    thumbnailBookRepository.findAllByBookIdAndType(book.id, ThumbnailBook.Type.GENERATED)
+      .filter { it.url != null }
+      .forEach { taskEmitter.deleteThumbnail(it.id, it.bookId, ThumbnailLifecycle.Type.BOOK) }
+
+    thumbnailBookRepository.findAllByBookIdAndType(book.id, ThumbnailBook.Type.USER_UPLOADED)
+      .filter { it.url != null }
+      .forEach { taskEmitter.deleteThumbnail(it.id, it.bookId, ThumbnailLifecycle.Type.BOOK) }
 
     if (book.path.parent.listDirectoryEntries().isEmpty())
       if (book.path.parent.deleteIfExists()) {

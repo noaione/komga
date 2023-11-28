@@ -1,6 +1,7 @@
 package org.gotson.komga.domain.service
 
 import mu.KotlinLogging
+import org.gotson.komga.application.tasks.TaskEmitter
 import org.gotson.komga.domain.model.DomainEvent
 import org.gotson.komga.domain.model.DuplicateNameException
 import org.gotson.komga.domain.model.Series
@@ -13,6 +14,8 @@ import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionTemplate
+import java.nio.file.Files
+import java.nio.file.Paths
 
 private val logger = KotlinLogging.logger {}
 
@@ -23,6 +26,7 @@ class SeriesCollectionLifecycle(
   private val seriesLifecycle: SeriesLifecycle,
   private val mosaicGenerator: MosaicGenerator,
   private val eventPublisher: ApplicationEventPublisher,
+  private val taskEmitter: TaskEmitter,
   private val transactionTemplate: TransactionTemplate,
 ) {
 
@@ -127,6 +131,7 @@ class SeriesCollectionLifecycle(
   fun deleteThumbnail(thumbnail: ThumbnailSeriesCollection) {
     thumbnailSeriesCollectionRepository.delete(thumbnail.id)
     thumbnailsHouseKeeping(thumbnail.collectionId)
+    taskEmitter.deleteThumbnail(thumbnail.id, thumbnail.collectionId, ThumbnailLifecycle.Type.SERIES_COLLECTION)
     eventPublisher.publishEvent(DomainEvent.ThumbnailSeriesCollectionDeleted(thumbnail))
   }
 
@@ -135,7 +140,12 @@ class SeriesCollectionLifecycle(
 
   fun getThumbnailBytes(collection: SeriesCollection, userId: String): ByteArray {
     thumbnailSeriesCollectionRepository.findSelectedByCollectionIdOrNull(collection.id)?.let {
-      return it.thumbnail
+      if (it.thumbnail != null) return it.thumbnail
+      if (it.url != null && it.exists()) {
+        return Files.readAllBytes(Paths.get(it.url.toURI()))
+      } else {
+        logger.warn { "Selected thumbnail for series collection ${collection.name} is not available, falling back to mosaic" }
+      }
     }
 
     val ids = with(mutableListOf<String>()) {

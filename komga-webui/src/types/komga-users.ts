@@ -12,6 +12,7 @@ export interface UserDto {
     age: number,
     restriction: AllowExclude,
   },
+  thumbnailSaveMode: string,
 }
 
 export interface UserCreationDto {

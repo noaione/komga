@@ -42,6 +42,18 @@ class ThumbnailSeriesDao(
       .fetchInto(ts)
       .map { it.toDomain() }
 
+  override fun findAllByType(type: ThumbnailSeries.Type): Collection<ThumbnailSeries> =
+    dsl.selectFrom(ts)
+      .where(ts.TYPE.eq(type.toString()))
+      .fetchInto(ts)
+      .map { it.toDomain() }
+
+  override fun findAllDiskThumbnail(): Collection<ThumbnailSeries> =
+    dsl.selectFrom(ts)
+      .where(ts.URL.isNotNull)
+      .fetchInto(ts)
+      .map { it.toDomain() }
+
   override fun findSelectedBySeriesIdOrNull(seriesId: String): ThumbnailSeries? =
     dsl.selectFrom(ts)
       .where(ts.SERIES_ID.eq(seriesId))
@@ -94,6 +106,17 @@ class ThumbnailSeriesDao(
           .execute()
       }
     }
+  }
+
+  override fun update(thumbnail: ThumbnailSeries) {
+    dsl.update(ts)
+      .set(ts.SERIES_ID, thumbnail.seriesId)
+      .set(ts.URL, thumbnail.url?.toString())
+      .set(ts.THUMBNAIL, thumbnail.thumbnail)
+      .set(ts.TYPE, thumbnail.type.toString())
+      .set(ts.SELECTED, thumbnail.selected)
+      .where(ts.ID.eq(thumbnail.id))
+      .execute()
   }
 
   @Transactional

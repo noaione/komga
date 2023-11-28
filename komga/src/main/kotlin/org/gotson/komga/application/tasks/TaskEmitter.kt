@@ -10,6 +10,7 @@ import org.gotson.komga.domain.model.Library
 import org.gotson.komga.domain.model.Media
 import org.gotson.komga.domain.persistence.BookRepository
 import org.gotson.komga.domain.service.BookConverter
+import org.gotson.komga.domain.service.ThumbnailLifecycle
 import org.gotson.komga.infrastructure.configuration.KomgaProperties
 import org.gotson.komga.infrastructure.jooq.UnpagedSorted
 import org.gotson.komga.infrastructure.search.LuceneEntity
@@ -182,6 +183,14 @@ class TaskEmitter(
     submitTask(Task.UpgradeIndex(priority))
   }
 
+  fun moveGeneratedThumbnails(priority: Int = DEFAULT_PRIORITY) {
+    submitTask(Task.MoveGeneratedThumbnails(priority))
+  }
+
+  fun renameDiskThumbnails(priority: Int = DEFAULT_PRIORITY) {
+    submitTask(Task.RenameDiskThumbnails(priority))
+  }
+
   fun deleteBook(bookId: String, priority: Int = DEFAULT_PRIORITY) {
     submitTask(Task.DeleteBook(bookId, priority))
   }
@@ -215,6 +224,10 @@ class TaskEmitter(
 
   fun findBookThumbnailsToRegenerate(forBiggerResultOnly: Boolean, priority: Int = DEFAULT_PRIORITY) {
     submitTask(Task.FindBookThumbnailsToRegenerate(forBiggerResultOnly, priority))
+  }
+
+  fun deleteThumbnail(thumbId: String, itemId: String, type: ThumbnailLifecycle.Type, priority: Int = LOW_PRIORITY) {
+    submitTask(Task.DeleteThumbnail(thumbId, itemId, priority, type))
   }
 
   private fun submitTask(task: Task) {

@@ -11,6 +11,8 @@ interface ThumbnailBookRepository {
   fun findAllByBookIdAndType(bookId: String, type: ThumbnailBook.Type): Collection<ThumbnailBook>
   fun findAllWithoutMetadata(pageable: Pageable): Page<ThumbnailBook>
   fun findAllBookIdsByThumbnailTypeAndDimensionSmallerThan(type: ThumbnailBook.Type, size: Int): Collection<String>
+  fun findAllByType(type: ThumbnailBook.Type): Collection<ThumbnailBook>
+  fun findAllDiskThumbnail(): Collection<ThumbnailBook>
 
   fun insert(thumbnail: ThumbnailBook)
   fun update(thumbnail: ThumbnailBook)
