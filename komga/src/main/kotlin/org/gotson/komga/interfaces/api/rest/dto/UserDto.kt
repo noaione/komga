@@ -3,6 +3,7 @@ package org.gotson.komga.interfaces.api.rest.dto
 import org.gotson.komga.domain.model.AgeRestriction
 import org.gotson.komga.domain.model.AllowExclude
 import org.gotson.komga.domain.model.KomgaUser
+import org.gotson.komga.infrastructure.configuration.ThumbnailSaveMode
 import org.gotson.komga.infrastructure.security.KomgaPrincipal
 
 data class UserDto(
@@ -14,6 +15,7 @@ data class UserDto(
   val labelsAllow: Set<String>,
   val labelsExclude: Set<String>,
   val ageRestriction: AgeRestrictionDto?,
+  val thumbnailSaveMode: ThumbnailSaveMode,
 )
 
 data class AgeRestrictionDto(
@@ -23,7 +25,7 @@ data class AgeRestrictionDto(
 
 fun AgeRestriction.toDto() = AgeRestrictionDto(age, restriction)
 
-fun KomgaUser.toDto() =
+fun KomgaUser.toDto(thumbnailMode: ThumbnailSaveMode) =
   UserDto(
     id = id,
     email = email,
@@ -33,6 +35,7 @@ fun KomgaUser.toDto() =
     labelsAllow = restrictions.labelsAllow,
     labelsExclude = restrictions.labelsExclude,
     ageRestriction = restrictions.ageRestriction?.toDto(),
+    thumbnailSaveMode = thumbnailMode,
   )
 
-fun KomgaPrincipal.toDto() = user.toDto()
+fun KomgaPrincipal.toDto(thumbnailMode: ThumbnailSaveMode) = user.toDto(thumbnailMode = thumbnailMode)
