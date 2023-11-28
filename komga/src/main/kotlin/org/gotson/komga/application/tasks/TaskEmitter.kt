@@ -12,6 +12,7 @@ import org.gotson.komga.domain.model.SearchContext
 import org.gotson.komga.domain.model.SearchOperator
 import org.gotson.komga.domain.persistence.BookRepository
 import org.gotson.komga.domain.service.BookConverter
+import org.gotson.komga.domain.service.ThumbnailLifecycle
 import org.gotson.komga.infrastructure.jooq.UnpagedSorted
 import org.gotson.komga.infrastructure.search.LuceneEntity
 import org.springframework.context.ApplicationEventPublisher
@@ -260,6 +261,14 @@ class TaskEmitter(
     submitTask(Task.UpgradeIndex(priority))
   }
 
+  fun moveGeneratedThumbnails(priority: Int = DEFAULT_PRIORITY) {
+    submitTask(Task.MoveGeneratedThumbnails(priority))
+  }
+
+  fun renameDiskThumbnails(priority: Int = DEFAULT_PRIORITY) {
+    submitTask(Task.RenameDiskThumbnails(priority))
+  }
+
   fun deleteBook(
     bookId: String,
     priority: Int = DEFAULT_PRIORITY,
@@ -279,6 +288,15 @@ class TaskEmitter(
     priority: Int = DEFAULT_PRIORITY,
   ) {
     submitTask(Task.FindBookThumbnailsToRegenerate(forBiggerResultOnly, priority))
+  }
+
+  fun deleteThumbnail(
+    thumbId: String,
+    itemId: String,
+    type: ThumbnailLifecycle.Type,
+    priority: Int = LOW_PRIORITY,
+  ) {
+    submitTask(Task.DeleteThumbnail(thumbId, itemId, priority, type))
   }
 
   private fun submitTask(task: Task) {

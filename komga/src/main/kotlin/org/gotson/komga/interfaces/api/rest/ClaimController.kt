@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank
 import org.gotson.komga.domain.model.KomgaUser
 import org.gotson.komga.domain.model.UserRoles
 import org.gotson.komga.domain.service.KomgaUserLifecycle
+import org.gotson.komga.infrastructure.configuration.KomgaProperties
 import org.gotson.komga.infrastructure.openapi.OpenApiConfiguration
 import org.gotson.komga.interfaces.api.rest.dto.UserDto
 import org.gotson.komga.interfaces.api.rest.dto.toDto
@@ -28,6 +29,7 @@ import org.springframework.web.server.ResponseStatusException
 @SecurityRequirements
 class ClaimController(
   private val userDetailsLifecycle: KomgaUserLifecycle,
+  private val komgaProperties: KomgaProperties,
 ) {
   @GetMapping
   @Operation(summary = "Retrieve claim status", description = "Check whether this server has already been claimed.")
@@ -53,7 +55,7 @@ class ClaimController(
           password = password,
           roles = UserRoles.entries.toSet(),
         ),
-      ).toDto()
+      ).toDto(komgaProperties.thumbnailGeneration.saveMode)
   }
 
   data class ClaimStatus(

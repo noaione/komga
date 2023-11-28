@@ -1,6 +1,7 @@
 package org.gotson.komga.domain.service
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.gotson.komga.application.tasks.TaskEmitter
 import org.gotson.komga.domain.model.Book
 import org.gotson.komga.domain.model.DomainEvent
 import org.gotson.komga.domain.model.DuplicateNameException
@@ -15,6 +16,8 @@ import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionTemplate
+import java.nio.file.Files
+import java.nio.file.Paths
 
 private val logger = KotlinLogging.logger {}
 
@@ -27,6 +30,7 @@ class ReadListLifecycle(
   private val readListMatcher: ReadListMatcher,
   private val readListProvider: ReadListProvider,
   private val eventPublisher: ApplicationEventPublisher,
+  private val taskEmitter: TaskEmitter,
   private val transactionTemplate: TransactionTemplate,
 ) {
   @Throws(
@@ -144,6 +148,7 @@ class ReadListLifecycle(
   fun deleteThumbnail(thumbnail: ThumbnailReadList) {
     thumbnailReadListRepository.delete(thumbnail.id)
     thumbnailsHouseKeeping(thumbnail.readListId)
+    taskEmitter.deleteThumbnail(thumbnail.id, thumbnail.readListId, ThumbnailLifecycle.Type.READ_LIST)
     eventPublisher.publishEvent(DomainEvent.ThumbnailReadListDeleted(thumbnail))
   }
 
@@ -151,7 +156,12 @@ class ReadListLifecycle(
 
   fun getThumbnailBytes(readList: ReadList): ByteArray {
     thumbnailReadListRepository.findSelectedByReadListIdOrNull(readList.id)?.let {
-      return it.thumbnail
+      if (it.thumbnail != null) return it.thumbnail
+      if (it.url != null && it.exists()) {
+        return Files.readAllBytes(Paths.get(it.url.toURI()))
+      } else {
+        logger.warn { "Selected thumbnail for read list ${readList.name} is not available, falling back to mosaic" }
+      }
     }
 
     val ids =
