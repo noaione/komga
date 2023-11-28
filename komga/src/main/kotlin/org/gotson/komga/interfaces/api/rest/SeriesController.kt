@@ -40,6 +40,7 @@ import org.gotson.komga.domain.persistence.SeriesRepository
 import org.gotson.komga.domain.persistence.ThumbnailSeriesRepository
 import org.gotson.komga.domain.service.BookLifecycle
 import org.gotson.komga.domain.service.SeriesLifecycle
+import org.gotson.komga.domain.service.ThumbnailLifecycle
 import org.gotson.komga.infrastructure.image.ImageAnalyzer
 import org.gotson.komga.infrastructure.jooq.UnpagedSorted
 import org.gotson.komga.infrastructure.mediacontainer.ContentDetector
@@ -113,6 +114,7 @@ class SeriesController(
   private val eventPublisher: ApplicationEventPublisher,
   private val contentDetector: ContentDetector,
   private val imageAnalyzer: ImageAnalyzer,
+  private val thumbnailLifecycle: ThumbnailLifecycle,
   private val thumbnailsSeriesRepository: ThumbnailSeriesRepository,
   private val contentRestrictionChecker: ContentRestrictionChecker,
 ) {
@@ -429,7 +431,8 @@ class SeriesController(
     if (!contentDetector.isImage(mediaType))
       throw ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
 
-    return seriesLifecycle.addThumbnailForSeries(
+    val seriesThumb = thumbnailLifecycle.saveThumbnailToDiskIfDiskMode(file.bytes, series.id, ThumbnailLifecycle.Type.SERIES)
+    var thumbSeries =
       ThumbnailSeries(
         seriesId = series.id,
         thumbnail = file.bytes,
@@ -437,7 +440,18 @@ class SeriesController(
         fileSize = file.bytes.size.toLong(),
         mediaType = mediaType,
         dimension = imageAnalyzer.getDimension(file.inputStream.buffered()) ?: Dimension(0, 0),
-      ),
+      )
+    if (seriesThumb != null) {
+      thumbSeries =
+        thumbSeries.copy(
+          id = seriesThumb.id,
+          thumbnail = null,
+          url = seriesThumb.url.toURL(),
+        )
+    }
+
+    return seriesLifecycle.addThumbnailForSeries(
+      thumbSeries,
       if (selected) MarkSelectedPreference.YES else MarkSelectedPreference.NO,
     ).toDto()
   }

@@ -19,6 +19,7 @@ import org.gotson.komga.domain.model.ThumbnailSeriesCollection
 import org.gotson.komga.domain.persistence.SeriesCollectionRepository
 import org.gotson.komga.domain.persistence.ThumbnailSeriesCollectionRepository
 import org.gotson.komga.domain.service.SeriesCollectionLifecycle
+import org.gotson.komga.domain.service.ThumbnailLifecycle
 import org.gotson.komga.infrastructure.image.ImageAnalyzer
 import org.gotson.komga.infrastructure.jooq.UnpagedSorted
 import org.gotson.komga.infrastructure.mediacontainer.ContentDetector
@@ -72,6 +73,7 @@ class SeriesCollectionController(
   private val imageAnalyzer: ImageAnalyzer,
   private val thumbnailSeriesCollectionRepository: ThumbnailSeriesCollectionRepository,
   private val eventPublisher: ApplicationEventPublisher,
+  private val thumbnailLifecycle: ThumbnailLifecycle,
 ) {
   @PageableWithoutSortAsQueryParam
   @GetMapping
@@ -161,7 +163,8 @@ class SeriesCollectionController(
       if (!contentDetector.isImage(mediaType))
         throw ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
 
-      return collectionLifecycle.addThumbnail(
+      val seriesCollectThumbUrl = thumbnailLifecycle.saveThumbnailToDiskIfDiskMode(file.bytes, collection.id, ThumbnailLifecycle.Type.SERIES_COLLECTION)
+      var thumbSeriesCollect =
         ThumbnailSeriesCollection(
           collectionId = collection.id,
           thumbnail = file.bytes,
@@ -170,7 +173,18 @@ class SeriesCollectionController(
           fileSize = file.bytes.size.toLong(),
           mediaType = mediaType,
           dimension = imageAnalyzer.getDimension(file.inputStream.buffered()) ?: Dimension(0, 0),
-        ),
+        )
+      if (seriesCollectThumbUrl != null) {
+        thumbSeriesCollect =
+          thumbSeriesCollect.copy(
+            id = seriesCollectThumbUrl.id,
+            thumbnail = null,
+            url = seriesCollectThumbUrl.url.toURL(),
+          )
+      }
+
+      return collectionLifecycle.addThumbnail(
+        thumbSeriesCollect,
       ).toDto()
     } ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
   }

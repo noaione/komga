@@ -1,6 +1,7 @@
 interface ActuatorInfo {
   git: ActuatorGit,
-  build: ActuatorBuild
+  build: ActuatorBuild,
+  thumbnail: ActuatorThumbnail
 }
 
 interface ActuatorGit {
@@ -19,4 +20,9 @@ interface ActuatorBuild {
   name: string,
   group: string,
   time: Date
+}
+
+interface ActuatorThumbnail {
+  mode: string,
+  limit: number
 }

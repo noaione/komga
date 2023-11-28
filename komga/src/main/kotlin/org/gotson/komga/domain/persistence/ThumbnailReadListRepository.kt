@@ -13,6 +13,10 @@ interface ThumbnailReadListRepository {
 
   fun findAllWithoutMetadata(pageable: Pageable): Page<ThumbnailReadList>
 
+  fun findAllByType(type: ThumbnailReadList.Type): Collection<ThumbnailReadList>
+
+  fun findAllDiskThumbnail(): Collection<ThumbnailReadList>
+
   fun insert(thumbnail: ThumbnailReadList)
 
   fun update(thumbnail: ThumbnailReadList)

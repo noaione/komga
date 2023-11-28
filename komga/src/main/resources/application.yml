@@ -21,6 +21,8 @@ komga:
   config-dir: \${user.home}/.komga
   tasks-db:
     file: \${komga.config-dir}/tasks.sqlite
+  thumbnail-generation:
+    disk-directory: \${komga.config-dir}/thumbnails
 
 spring:
   flyway:

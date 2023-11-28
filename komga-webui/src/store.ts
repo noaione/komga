@@ -56,6 +56,8 @@ export default new Vuex.Store({
 
     booksToCheck: 0,
 
+    // actuator
+    actuatorInfo: {} as ActuatorInfo,
     announcements: {} as JsonFeedDto,
   },
   getters: {
@@ -162,6 +164,10 @@ export default new Vuex.Store({
     },
     setAnnouncements(state, announcements) {
       state.announcements = announcements
+    },
+    // Actuator
+    setActuatorInfo(state, actuator) {
+      state.actuatorInfo = actuator
     },
   },
   actions: {
@@ -274,6 +280,10 @@ export default new Vuex.Store({
     },
     dialogDeleteSeriesDisplay({commit}, value) {
       commit('setDeleteSeriesDialog', value)
+    },
+    // actuator
+    prepareActuatorInfo({commit}, value) {
+      commit('setActuatorInfo', value)
     },
   },
   modules: {
