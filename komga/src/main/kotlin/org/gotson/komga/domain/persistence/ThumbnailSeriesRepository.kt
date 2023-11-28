@@ -18,7 +18,13 @@ interface ThumbnailSeriesRepository {
 
   fun findAllWithoutMetadata(pageable: Pageable): Page<ThumbnailSeries>
 
+  fun findAllByType(type: ThumbnailSeries.Type): Collection<ThumbnailSeries>
+
+  fun findAllDiskThumbnail(): Collection<ThumbnailSeries>
+
   fun insert(thumbnail: ThumbnailSeries)
+
+  fun update(thumbnail: ThumbnailSeries)
 
   fun updateMetadata(thumbnails: Collection<ThumbnailSeries>)
 
