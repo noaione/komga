@@ -4,7 +4,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.gotson.komga.domain.model.Book
 import org.gotson.komga.domain.model.BookPage
 import org.gotson.komga.domain.model.BookWithMedia
-import org.gotson.komga.domain.model.Dimension
 import org.gotson.komga.domain.model.Media
 import org.gotson.komga.domain.model.MediaExtensionEpub
 import org.gotson.komga.domain.model.MediaFile
@@ -12,13 +11,8 @@ import org.gotson.komga.domain.model.MediaNotReadyException
 import org.gotson.komga.domain.model.MediaProfile
 import org.gotson.komga.domain.model.MediaType
 import org.gotson.komga.domain.model.MediaUnsupportedException
-import org.gotson.komga.domain.model.NoThumbnailFoundException
-import org.gotson.komga.domain.model.ThumbnailBook
 import org.gotson.komga.domain.model.TypedBytes
-import org.gotson.komga.infrastructure.configuration.KomgaSettingsProvider
 import org.gotson.komga.infrastructure.hash.Hasher
-import org.gotson.komga.infrastructure.image.ImageAnalyzer
-import org.gotson.komga.infrastructure.image.ImageConverter
 import org.gotson.komga.infrastructure.image.ImageType
 import org.gotson.komga.infrastructure.mediacontainer.ContentDetector
 import org.gotson.komga.infrastructure.mediacontainer.divina.DivinaExtractor
@@ -42,13 +36,8 @@ class BookAnalyzer(
   extractors: List<DivinaExtractor>,
   private val pdfExtractor: PdfExtractor,
   private val epubExtractor: EpubExtractor,
-  private val imageConverter: ImageConverter,
-  private val imageAnalyzer: ImageAnalyzer,
   private val hasher: Hasher,
   @param:Value("#{@komgaProperties.pageHashing}") private val pageHashing: Int,
-  private val komgaSettingsProvider: KomgaSettingsProvider,
-  @Qualifier("thumbnailType")
-  private val thumbnailType: ImageType,
   @Qualifier("pdfImageType")
   private val pdfImageType: ImageType,
 ) {
@@ -235,56 +224,6 @@ class BookAnalyzer(
     val pages = pdfExtractor.getPages(book.path, analyzeDimensions).map { BookPage(it.name, "", it.dimension) }
     return Media(status = Media.Status.READY, pages = pages)
   }
-
-  @Throws(
-    MediaNotReadyException::class,
-    NoThumbnailFoundException::class,
-  )
-  fun generateThumbnail(book: BookWithMedia): ThumbnailBook {
-    logger.info { "Generate thumbnail for book: $book" }
-
-    if (book.media.status != Media.Status.READY) {
-      logger.warn { "Book media is not ready, cannot generate thumbnail. Book: $book" }
-      throw MediaNotReadyException()
-    }
-
-    val thumbnail =
-      getPoster(book)?.let { cover ->
-        imageConverter.resizeImageToByteArray(cover.bytes, thumbnailType, komgaSettingsProvider.thumbnailSize.maxEdge)
-      } ?: throw NoThumbnailFoundException()
-
-    return ThumbnailBook(
-      thumbnail = thumbnail,
-      type = ThumbnailBook.Type.GENERATED,
-      bookId = book.book.id,
-      mediaType = thumbnailType.mediaType,
-      dimension = imageAnalyzer.getDimension(thumbnail.inputStream()) ?: Dimension(0, 0),
-      fileSize = thumbnail.size.toLong(),
-    )
-  }
-
-  fun getPoster(book: BookWithMedia): TypedBytes? =
-    when (book.media.profile) {
-      MediaProfile.DIVINA ->
-        divinaExtractors[book.media.mediaType]
-          ?.getEntryStream(
-            book.book.path,
-            book.media.pages
-              .first()
-              .fileName,
-          )?.let {
-            TypedBytes(
-              it,
-              book.media.pages
-                .first()
-                .mediaType,
-            )
-          }
-
-      MediaProfile.PDF -> pdfExtractor.getPageContentAsImage(book.book.path, 1)
-      MediaProfile.EPUB -> epubExtractor.getCover(book.book.path)
-      null -> null
-    }
 
   @Throws(
     MediaNotReadyException::class,

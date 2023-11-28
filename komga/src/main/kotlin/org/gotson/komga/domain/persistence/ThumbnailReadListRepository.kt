@@ -9,6 +9,10 @@ interface ThumbnailReadListRepository {
 
   fun findAllByReadListId(readListId: String): Collection<ThumbnailReadList>
 
+  fun findAllByType(type: ThumbnailReadList.Type): Collection<ThumbnailReadList>
+
+  fun findAllDiskThumbnail(): Collection<ThumbnailReadList>
+
   fun insert(thumbnail: ThumbnailReadList)
 
   fun update(thumbnail: ThumbnailReadList)
