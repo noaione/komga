@@ -59,6 +59,7 @@ export default new Vuex.Store({
 
     announcements: {} as JsonFeedDto,
 
+    // actuator
     actuatorInfo: {} as ActuatorInfo,
 
     releases: [] as ReleaseDto[],
@@ -291,6 +292,10 @@ export default new Vuex.Store({
     },
     dialogDeleteSeriesDisplay({commit}, value) {
       commit('setDeleteSeriesDialog', value)
+    },
+    // actuator
+    prepareActuatorInfo({commit}, value) {
+      commit('setActuatorInfo', value)
     },
   },
   modules: {

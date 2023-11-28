@@ -61,6 +61,18 @@ class ThumbnailSeriesCollectionDao(
     return PageImpl(items, pageable, count.toLong())
   }
 
+  override fun findAllByType(type: ThumbnailSeriesCollection.Type): Collection<ThumbnailSeriesCollection> =
+    dsl.selectFrom(tc)
+      .where(tc.TYPE.eq(type.toString()))
+      .fetchInto(tc)
+      .map { it.toDomain() }
+
+  override fun findAllDiskThumbnail(): Collection<ThumbnailSeriesCollection> =
+    dsl.selectFrom(tc)
+      .where(tc.URL.isNotNull)
+      .fetchInto(tc)
+      .map { it.toDomain() }
+
   override fun insert(thumbnail: ThumbnailSeriesCollection) {
     dsl
       .insertInto(tc)

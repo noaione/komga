@@ -243,8 +243,8 @@ export default Vue.extend({
   },
   async created() {
     if (this.isAdmin) {
-      this.$actuator.getInfo()
-        .then(x => this.$store.commit('setActuatorInfo', x))
+      this.info = await this.$actuator.getInfo()
+      this.$store.dispatch('prepareActuatorInfo', this.info)
       this.$komgaBooks.getBooks(undefined, {size: 0} as PageRequest, undefined, [MediaStatus.ERROR, MediaStatus.UNSUPPORTED])
         .then(x => this.$store.commit('setBooksToCheck', x.totalElements))
       this.$komgaAnnouncements.getAnnouncements()
