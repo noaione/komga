@@ -87,10 +87,11 @@ class TransientBookLifecycle(
   ): TypedBytes {
     val pageContent = bookAnalyzer.getPageContent(transientBook.toBookWithMedia(), number)
     val pageMediaType =
-      if (transientBook.media.profile == MediaProfile.PDF)
-        pdfImageType.mediaType
-      else
-        transientBook.media.pages[number - 1].mediaType
+      when (transientBook.media.profile) {
+        MediaProfile.PDF -> pdfImageType.mediaType
+        MediaProfile.EPUB -> bookAnalyzer.getPageInfoFromEpub(transientBook.media, number).mediaType!!
+        else -> transientBook.media.pages[number - 1].mediaType
+      }
 
     return TypedBytes(pageContent, pageMediaType)
   }
