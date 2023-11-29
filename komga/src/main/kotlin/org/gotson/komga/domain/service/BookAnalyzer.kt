@@ -40,6 +40,8 @@ class BookAnalyzer(
   @param:Value("#{@komgaProperties.pageHashing}") private val pageHashing: Int,
   @Qualifier("pdfImageType")
   private val pdfImageType: ImageType,
+  @Qualifier("thumbnailType")
+  private val thumbnailType: ImageType,
 ) {
   val divinaExtractors =
     extractors
@@ -252,10 +254,55 @@ class BookAnalyzer(
         if (book.media.epubDivinaCompatible)
           epubExtractor.getEntryStream(book.book.path, book.media.pages[number - 1].fileName)
         else
-          throw MediaUnsupportedException("Epub profile does not support getting page content")
-
+          getPageContentFromEpub(book, number).bytes
       null -> throw MediaNotReadyException()
     }
+  }
+
+  @Throws(
+    MediaNotReadyException::class,
+    IndexOutOfBoundsException::class,
+  )
+  fun getPageInfoFromEpub(
+    media: Media,
+    number: Int,
+  ): MediaFile {
+    logger.debug { "Get page #$number for media: $media" }
+
+    if (media.profile != MediaProfile.EPUB) throw MediaUnsupportedException("Extractor only support getting page content from EPUB")
+
+    if (media.status != Media.Status.READY) {
+      logger.warn { "Book media is not ready, cannot get pages" }
+      throw MediaNotReadyException()
+    }
+
+    val imageFiles =
+      media.files.filter { file ->
+        file.subType == MediaFile.SubType.EPUB_ASSET && file.mediaType?.startsWith("image/") ?: false
+      }
+
+    if (number > imageFiles.size || number <= 0) {
+      logger.error { "Page number #$number is out of bounds. Book has ${imageFiles.size} pages" }
+      throw IndexOutOfBoundsException("Page $number does not exist")
+    }
+
+    return imageFiles[number - 1]
+  }
+
+  @Throws(
+    MediaNotReadyException::class,
+    IndexOutOfBoundsException::class,
+  )
+  fun getPageContentFromEpub(
+    book: BookWithMedia,
+    number: Int,
+  ): TypedBytes {
+    val imageFile = getPageInfoFromEpub(book.media, number)
+
+    return TypedBytes(
+      epubExtractor.getEntryStream(book.book.path, imageFile.fileName),
+      imageFile.mediaType ?: thumbnailType.mediaType,
+    )
   }
 
   @Throws(
