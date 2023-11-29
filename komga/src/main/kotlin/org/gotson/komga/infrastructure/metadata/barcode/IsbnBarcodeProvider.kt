@@ -12,6 +12,7 @@ import org.gotson.komga.domain.model.BookMetadataPatch
 import org.gotson.komga.domain.model.BookMetadataPatchCapability
 import org.gotson.komga.domain.model.BookWithMedia
 import org.gotson.komga.domain.model.Library
+import org.gotson.komga.domain.model.MediaFile
 import org.gotson.komga.domain.model.MediaProfile
 import org.gotson.komga.domain.model.MetadataPatchTarget
 import org.gotson.komga.domain.service.BookAnalyzer
@@ -40,9 +41,14 @@ class IsbnBarcodeProvider(
     setOf(BookMetadataPatchCapability.ISBN)
 
   override fun getBookMetadataFromBook(book: BookWithMedia): BookMetadataPatch? {
-    if (book.media.profile == MediaProfile.EPUB) return null
-
-    val pagesToTry = (1..book.media.pageCount).toList().let {
+    val mediaCount = if (book.media.profile == MediaProfile.EPUB) {
+      book.media.files.count { file ->
+        file.subType == MediaFile.SubType.EPUB_ASSET && file.mediaType?.startsWith("image/") ?: false
+      }
+    } else {
+      book.media.pageCount
+    }
+    val pagesToTry = (1..mediaCount).toList().let {
       (it.takeLast(PAGES_LAST).reversed() + it.take(PAGES_FIRST)).distinct()
     }
 
