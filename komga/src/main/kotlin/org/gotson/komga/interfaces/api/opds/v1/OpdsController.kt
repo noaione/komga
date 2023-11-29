@@ -22,6 +22,7 @@ import org.gotson.komga.domain.persistence.MediaRepository
 import org.gotson.komga.domain.persistence.ReadListRepository
 import org.gotson.komga.domain.persistence.ReferentialRepository
 import org.gotson.komga.domain.persistence.SeriesCollectionRepository
+import org.gotson.komga.domain.service.BookAnalyzer
 import org.gotson.komga.domain.service.BookLifecycle
 import org.gotson.komga.infrastructure.configuration.KomgaSettingsProvider
 import org.gotson.komga.infrastructure.image.ImageType
@@ -113,6 +114,7 @@ class OpdsController(
   private val commonBookController: CommonBookController,
   private val komgaSettingsProvider: KomgaSettingsProvider,
   private val contentRestrictionChecker: ContentRestrictionChecker,
+  private val bookAnalyzer: BookAnalyzer,
   @Qualifier("pdfImageType")
   private val pdfImageType: ImageType,
 ) {
@@ -761,7 +763,8 @@ class OpdsController(
     val thumbnailMediaType =
       when (media.profile) {
         MediaProfile.PDF -> pdfImageType.mediaType
-        else -> "image/jpeg"
+        MediaProfile.EPUB -> bookAnalyzer.getPageInfoFromEpub(media, 1).mediaType ?: "image/jpeg"
+        else -> media.pages[0].mediaType
       }
 
     return OpdsEntryAcquisition(
