@@ -169,7 +169,7 @@ tasks {
     if (forkRevision != null) {
       var archiveFn = archiveFileName.get()
       val archiveExt = archiveExtension.get()
-      archiveFn = archiveFn.replace(".$archiveExt", "-nao${forkRevision}.$archiveExt")
+      archiveFn = archiveFn.replace(".$archiveExt", "-nao$forkRevision.$archiveExt")
       archiveFileName.set(archiveFn)
     }
   }

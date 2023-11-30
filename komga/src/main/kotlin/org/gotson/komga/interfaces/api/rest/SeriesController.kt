@@ -34,11 +34,11 @@ import org.gotson.komga.domain.model.SeriesSearchWithReadProgress
 import org.gotson.komga.domain.model.ThumbnailSeries
 import org.gotson.komga.domain.model.WebLink
 import org.gotson.komga.domain.persistence.BookRepository
+import org.gotson.komga.domain.persistence.MediaRepository
 import org.gotson.komga.domain.persistence.SeriesCollectionRepository
 import org.gotson.komga.domain.persistence.SeriesMetadataRepository
 import org.gotson.komga.domain.persistence.SeriesRepository
 import org.gotson.komga.domain.persistence.ThumbnailSeriesRepository
-import org.gotson.komga.domain.persistence.MediaRepository
 import org.gotson.komga.domain.service.BookLifecycle
 import org.gotson.komga.domain.service.SeriesLifecycle
 import org.gotson.komga.domain.service.ThumbnailLifecycle
@@ -93,7 +93,6 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
-import java.io.FileNotFoundException
 import java.io.OutputStream
 import java.net.URI
 import java.nio.charset.StandardCharsets.UTF_8
@@ -718,21 +717,21 @@ class SeriesController(
           zipStream.setLevel(Deflater.NO_COMPRESSION)
           zipStream.setUseZip64(Zip64Mode.Always)
           books.forEach { book ->
-              val file = FileSystemResource(book.path)
-              if (!file.exists()) {
-                logger.warn { "Book file not found, skipping archive entry: ${file.path}" }
-                return@forEach
-              }
+            val file = FileSystemResource(book.path)
+            if (!file.exists()) {
+              logger.warn { "Book file not found, skipping archive entry: ${file.path}" }
+              return@forEach
+            }
 
-              logger.debug { "Adding file to zip archive: ${file.path}" }
-              file.inputStream.use {
-                zipStream.putArchiveEntry(ZipArchiveEntry(file.filename))
-                IOUtils.copyLarge(it, zipStream, ByteArray(8192))
-                zipStream.closeArchiveEntry()
-              }
+            logger.debug { "Adding file to zip archive: ${file.path}" }
+            file.inputStream.use {
+              zipStream.putArchiveEntry(ZipArchiveEntry(file.filename))
+              IOUtils.copyLarge(it, zipStream, ByteArray(8192))
+              zipStream.closeArchiveEntry()
             }
           }
         }
+      }
 
       responseBody = ResponseEntity.ok()
         .headers(
@@ -744,7 +743,7 @@ class SeriesController(
         )
         .contentType(MediaType.parseMediaType(ZIP.type))
         .body(streamingResponse)
-      }
+    }
 
     return responseBody
   }
