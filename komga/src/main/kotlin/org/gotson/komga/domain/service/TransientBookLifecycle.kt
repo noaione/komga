@@ -21,6 +21,8 @@ class TransientBookLifecycle(
   private val libraryRepository: LibraryRepository,
   @Qualifier("pdfImageType")
   private val pdfImageType: ImageType,
+  @Qualifier("thumbnailType")
+  private val thumbnailType: ImageType,
 ) {
 
   fun scanAndPersist(filePath: String): List<BookWithMedia> {
@@ -54,6 +56,7 @@ class TransientBookLifecycle(
     val pageContent = bookAnalyzer.getPageContent(transientBook, number)
     val pageMediaType =
       if (transientBook.media.profile == MediaProfile.PDF) pdfImageType.mediaType
+      else if (transientBook.media.profile == MediaProfile.EPUB) bookAnalyzer.getPageInfoFromEpub(transientBook.media, number).mediaType!!
       else transientBook.media.pages[number - 1].mediaType
 
     return TypedBytes(pageContent, pageMediaType)

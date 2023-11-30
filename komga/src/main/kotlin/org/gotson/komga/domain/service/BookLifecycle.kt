@@ -65,6 +65,8 @@ class BookLifecycle(
   private val komgaSettingsProvider: KomgaSettingsProvider,
   @Qualifier("pdfImageType")
   private val pdfImageType: ImageType,
+  @Qualifier("thumbnailType")
+  private val thumbnailType: ImageType,
 ) {
 
   private val resizeTargetFormat = ImageType.JPEG
@@ -274,24 +276,25 @@ class BookLifecycle(
     MediaNotReadyException::class,
     IndexOutOfBoundsException::class,
   )
-  fun getBookPage(book: Book, number: Int, convertTo: ImageType? = null, resizeTo: Int? = null): TypedBytes {
-    val media = mediaRepository.findById(book.id)
-    val pageContent = bookAnalyzer.getPageContent(BookWithMedia(book, media), number)
-    val pageMediaType =
-      if (media.profile == MediaProfile.PDF) pdfImageType.mediaType
-      else media.pages[number - 1].mediaType
+  fun getBookPage(bookWithMedia: BookWithMedia, number: Int, convertTo: ImageType? = null, resizeTo: Int? = null): TypedBytes {
+    val pageContent = bookAnalyzer.getPageContent(bookWithMedia, number)
+    val pageMediaType = when (bookWithMedia.media.profile) {
+      MediaProfile.PDF -> pdfImageType.mediaType
+      MediaProfile.EPUB -> bookAnalyzer.getPageInfoFromEpub(bookWithMedia.media, number).mediaType!!
+      else -> bookWithMedia.media.pages[number - 1].mediaType
+    }
 
     if (resizeTo != null) {
       val convertedPage = try {
         imageConverter.resizeImageToByteArray(pageContent, resizeTargetFormat, resizeTo)
       } catch (e: Exception) {
-        logger.error(e) { "Resize page #$number of book $book to $resizeTo: failed" }
+        logger.error(e) { "Resize page #$number of book ${bookWithMedia.book} to $resizeTo: failed" }
         throw e
       }
       return TypedBytes(convertedPage, resizeTargetFormat.mediaType)
     } else {
       convertTo?.let {
-        val msg = "Convert page #$number of book $book from $pageMediaType to ${it.mediaType}"
+        val msg = "Convert page #$number of book ${bookWithMedia.book} from $pageMediaType to ${it.mediaType}"
         if (!imageConverter.supportedReadMediaTypes.contains(pageMediaType)) {
           throw ImageConversionException("$msg: unsupported read format $pageMediaType")
         }
@@ -315,6 +318,17 @@ class BookLifecycle(
 
       return TypedBytes(pageContent, pageMediaType)
     }
+  }
+
+  @Throws(
+    ImageConversionException::class,
+    MediaNotReadyException::class,
+    IndexOutOfBoundsException::class,
+  )
+  fun getBookPage(book: Book, number: Int, convertTo: ImageType? = null, resizeTo: Int? = null): TypedBytes {
+    val media = mediaRepository.findById(book.id)
+
+    return getBookPage(BookWithMedia(book, media), number, convertTo, resizeTo)
   }
 
   fun deleteOne(book: Book) {

@@ -22,6 +22,7 @@ import org.gotson.komga.domain.persistence.ReadListRepository
 import org.gotson.komga.domain.persistence.ReferentialRepository
 import org.gotson.komga.domain.persistence.SeriesCollectionRepository
 import org.gotson.komga.domain.persistence.SeriesMetadataRepository
+import org.gotson.komga.domain.service.BookAnalyzer
 import org.gotson.komga.domain.service.BookLifecycle
 import org.gotson.komga.infrastructure.configuration.KomgaSettingsProvider
 import org.gotson.komga.infrastructure.image.ImageType
@@ -116,8 +117,11 @@ class OpdsController(
   private val bookRepository: BookRepository,
   private val bookLifecycle: BookLifecycle,
   private val komgaSettingsProvider: KomgaSettingsProvider,
+  private val bookAnalyzer: BookAnalyzer,
   @Qualifier("pdfImageType")
   private val pdfImageType: ImageType,
+  @Qualifier("thumbnailType")
+  private val thumbnailType: ImageType,
 ) {
 
   private val komgaAuthor = OpdsAuthor("Komga", URI("https://github.com/gotson/komga"))
@@ -842,9 +846,12 @@ class OpdsController(
         OpdsLinkPageStreaming("image/jpeg", uriBuilder("books/$id/pages/").toUriString() + "{pageNumber}?convert=jpeg", media.pageCount, readProgress?.page, readProgress?.readDate)
       }
 
-    val thumbnailMediaType = when (media.profile) {
-      MediaProfile.PDF -> pdfImageType.mediaType
-      else -> "image/jpeg"
+    val thumbnailMediaType = if (media.profile == MediaProfile.PDF) {
+      pdfImageType.mediaType
+    } else if (media.profile == MediaProfile.EPUB) {
+      bookAnalyzer.getPageInfoFromEpub(media, 1).mediaType ?: "image/jpeg"
+    } else {
+      media.pages[0].mediaType
     }
 
     return OpdsEntryAcquisition(
@@ -858,6 +865,7 @@ class OpdsController(
       authors = metadata.authors.map { OpdsAuthor(it.name) },
       links = listOfNotNull(
         OpdsLinkImageThumbnail("image/jpeg", uriBuilder("books/$id/thumbnail/small").toUriString()),
+        OpdsLinkImage(thumbnailMediaType, uriBuilder("books/$id/thumbnail").toUriString()),
         OpdsLinkImage(thumbnailMediaType, uriBuilder("books/$id/thumbnail").toUriString()),
         OpdsLinkFileAcquisition(media.mediaType, uriBuilder("books/$id/file/${sanitize(FilenameUtils.getName(url))}").toUriString()),
         opdsLinkPageStreaming,

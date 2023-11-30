@@ -3,6 +3,7 @@ package org.gotson.komga.interfaces.api.rest
 import com.ninjasquad.springmockk.MockkBean
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.every
+import org.gotson.komga.domain.model.Book
 import org.gotson.komga.domain.model.BookPage
 import org.gotson.komga.domain.model.Media
 import org.gotson.komga.domain.model.TypedBytes
@@ -95,7 +96,7 @@ class BookControllerPageTest(
     }
 
     every { mockAnalyzer.getPageContentRaw(any(), 1) } returns TypedBytes(ByteArray(0), "application/pdf")
-    every { bookLifecycle.getBookPage(any(), 1, any(), any()) } returns TypedBytes(ByteArray(0), "image/jpeg")
+    every { bookLifecycle.getBookPage(any<Book>(), 1, any(), any()) } returns TypedBytes(ByteArray(0), "image/jpeg")
 
     mockMvc.get("/api/v1/books/${book.id}/pages/1") {
       if (acceptTypes.isNotEmpty()) accept(*acceptTypes.toTypedArray())
