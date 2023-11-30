@@ -39,6 +39,8 @@ class BookAnalyzer(
   @Value("#{@komgaProperties.pageHashing}") private val pageHashing: Int,
   @Qualifier("pdfImageType")
   private val pdfImageType: ImageType,
+  @Qualifier("thumbnailType")
+  private val thumbnailType: ImageType,
 ) {
   val divinaExtractors = extractors
     .flatMap { e -> e.mediaTypes().map { it to e } }
