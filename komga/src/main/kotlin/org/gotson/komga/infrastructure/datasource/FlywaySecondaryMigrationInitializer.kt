@@ -18,6 +18,7 @@ class FlywaySecondaryMigrationInitializer(
       .dataSource(tasksDataSource)
       .load()
       .apply {
+        repair()
         migrate()
       }
   }
