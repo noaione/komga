@@ -1,0 +1,49 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - naoX
+  pull_request:
+    branches:
+      - naoX
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Create build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: komga-webui/package-lock.json
+
+      - uses: actions/setup-java@v3
+        with:
+          java-version: 21
+          java-package: 'jdk'
+          distribution: 'temurin'
+      - uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          java-package: 'jdk'
+          distribution: 'temurin'
+
+      - name: Build
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: :komga:prepareThymeLeaf :komga:bootJar :komga-tray:jar
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: komga-${{ github.event.inputs.version }}
+          path: |
+            komga/build/libs/*.jar
+            komga-tray/build/libs/*.jar
+
