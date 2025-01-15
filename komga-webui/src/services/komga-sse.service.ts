@@ -40,19 +40,19 @@ export default class KomgaSseService {
   private store: any
 
   // Backoff handling
-  private reconnectAttempt: number;
-  private baseDelay: number;
-  private attemptReset: number;
-  private _connected: boolean;
+  private reconnectAttempt: number
+  private baseDelay: number
+  private attemptReset: number
+  private _connected: boolean
 
   constructor(eventHub: Vue, store: any) {
     this.eventHub = eventHub
     this.store = store
 
-    this.reconnectAttempt = 1;
-    this.baseDelay = 1000;
-    this.attemptReset = 8;
-    this._connected = false;
+    this.reconnectAttempt = 1
+    this.baseDelay = 1000
+    this.attemptReset = 8
+    this._connected = false
 
     this.eventHub.$watch(
       () => this.store.getters.authenticated,
@@ -64,7 +64,7 @@ export default class KomgaSseService {
 
   connect() {
     if (this._connected) {
-      return;
+      return
     }
 
     this.eventSource = new EventSource(urls.originNoSlash + API_SSE, {withCredentials: true})
@@ -152,10 +152,9 @@ export default class KomgaSseService {
           }
           this._connected = false
           const delayBy = this.baseDelay * 2 ** this.reconnectAttempt
-          console.info(`Reconnecting SSE in ${delayBy}ms`)
 
           setTimeout(() => {
-            this.reconnectAttempt++;
+            this.reconnectAttempt++
             this.connect()
           }, delayBy)
           break
