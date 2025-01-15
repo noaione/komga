@@ -137,16 +137,6 @@ class ThumbnailSeriesDao(
     }
   }
 
-  override fun update(thumbnail: ThumbnailSeries) {
-    dsl.update(ts)
-      .set(ts.SERIES_ID, thumbnail.seriesId)
-      .set(ts.URL, thumbnail.url?.toString())
-      .set(ts.THUMBNAIL, thumbnail.thumbnail)
-      .set(ts.TYPE, thumbnail.type.toString())
-      .set(ts.SELECTED, thumbnail.selected)
-      .where(ts.ID.eq(thumbnail.id))
-      .execute()
-  }
 
   @Transactional
   override fun markSelected(thumbnail: ThumbnailSeries) {
