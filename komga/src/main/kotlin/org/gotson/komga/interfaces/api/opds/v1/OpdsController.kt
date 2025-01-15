@@ -791,18 +791,21 @@ class OpdsController(
       if (!principal.user.canAccessLibrary(library)) throw ResponseStatusException(HttpStatus.FORBIDDEN)
 
       val seriesSearch =
-        SeriesSearchWithReadProgress(
-          libraryIds = setOf(library.id),
-          deleted = false,
+        SeriesSearch(
+          condition = SearchCondition.AllOfSeries(
+            buildList {
+              add(SearchCondition.AnyOfSeries(listOf(SearchCondition.LibraryId(SearchOperator.Is(library.id)))))
+              add(SearchCondition.Deleted(SearchOperator.IsFalse))
+            }
+          )
         )
 
       val pageable = PageRequest.of(page.pageNumber, page.pageSize, Sort.by(Sort.Order.desc("lastModified")))
 
-      val seriesPage =
-        seriesDtoRepository.findAllRecentlyUpdated(
+      val seriesPage = seriesDtoRepository
+        .findAllRecentlyUpdated(
           seriesSearch,
-          principal.user.id,
-          principal.user.restrictions,
+          SearchContext(principal.user),
           pageable,
         )
 
@@ -834,15 +837,19 @@ class OpdsController(
       if (!principal.user.canAccessLibrary(library)) throw ResponseStatusException(HttpStatus.FORBIDDEN)
 
       val bookSearch =
-        BookSearchWithReadProgress(
-          libraryIds = setOf(library.id),
-          mediaStatus = setOf(Media.Status.READY),
-          deleted = false,
+        BookSearch(
+          condition = SearchCondition.AllOfBook(
+            buildList {
+              add(SearchCondition.AnyOfBook(listOf(SearchCondition.LibraryId(SearchOperator.Is(library.id)))))
+              add(SearchCondition.AnyOfBook(listOf(SearchCondition.MediaStatus(SearchOperator.Is(Media.Status.READY)))))
+              add(SearchCondition.Deleted(SearchOperator.IsFalse))
+            }
+          )
         )
 
       val pageable = PageRequest.of(page.pageNumber, page.pageSize, Sort.by(Sort.Order.desc("createdDate")))
 
-      val bookPage = bookDtoRepository.findAll(bookSearch, principal.user.id, pageable, principal.user.restrictions)
+      val bookPage = bookDtoRepository.findAll(bookSearch, SearchContext(principal.user), pageable)
 
       val uriBuilder = uriBuilder("$ROUTE_BOOKS_LATEST_LIBRARIES/$id")
 
