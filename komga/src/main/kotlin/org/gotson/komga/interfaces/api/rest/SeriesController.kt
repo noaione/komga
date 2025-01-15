@@ -650,7 +650,7 @@ class SeriesController(
   }
 
   @PostMapping("v1/series/{seriesId}/scan")
-  @PreAuthorize("hasRole('$ROLE_ADMIN')")
+  @PreAuthorize("hasRole('ADMIN')")
   @ResponseStatus(HttpStatus.ACCEPTED)
   fun scan(
     @PathVariable seriesId: String,
