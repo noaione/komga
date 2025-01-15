@@ -17,14 +17,21 @@ class ThumbnailGenerationController(
 ) {
   @EventListener(ApplicationReadyEvent::class)
   fun moveThumbnailsIfGenerationModeIsAlways() {
-    if (komgaProperties.thumbnailGeneration.saveMode.toString().startsWith("ALWAYS")) {
+    if (komgaProperties.thumbnailGeneration.saveMode
+        .toString()
+        .startsWith("ALWAYS")
+    ) {
       taskEmitter.moveGeneratedThumbnails(HIGH_PRIORITY)
     }
   }
 
   @EventListener(ApplicationReadyEvent::class)
   fun renameDiskThumbnailsFormatting() {
-    if (komgaProperties.thumbnailGeneration.saveMode.toString().contains("DISK") && !komgaProperties.thumbnailGeneration.skipRenaming) {
+    if (komgaProperties.thumbnailGeneration.saveMode
+        .toString()
+        .contains("DISK") &&
+      !komgaProperties.thumbnailGeneration.skipRenaming
+    ) {
       taskEmitter.renameDiskThumbnails(HIGHEST_PRIORITY)
     }
   }

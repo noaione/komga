@@ -357,7 +357,8 @@ class SeriesLifecycle(
       if (it.deleteIfExists()) logger.info { "Deleted file: $it" }
     }
 
-    thumbnailsSeriesRepository.findAllBySeriesIdIdAndType(series.id, ThumbnailSeries.Type.USER_UPLOADED)
+    thumbnailsSeriesRepository
+      .findAllBySeriesIdIdAndType(series.id, ThumbnailSeries.Type.USER_UPLOADED)
       .filter { it.url != null }
       .forEach { taskEmitter.deleteThumbnail(it.id, it.seriesId, ThumbnailLifecycle.Type.BOOK) }
 

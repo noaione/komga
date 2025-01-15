@@ -361,10 +361,11 @@ class BookController(
         )
     }
 
-    return bookLifecycle.addThumbnailForBook(
-      thumbBook,
-      if (selected) MarkSelectedPreference.YES else MarkSelectedPreference.NO,
-    ).toDto()
+    return bookLifecycle
+      .addThumbnailForBook(
+        thumbBook,
+        if (selected) MarkSelectedPreference.YES else MarkSelectedPreference.NO,
+      ).toDto()
   }
 
   @PutMapping("api/v1/books/{bookId}/thumbnails/{thumbnailId}/selected")

@@ -173,12 +173,13 @@ class SeriesCollectionController(
       if (!contentDetector.isImage(mediaType))
         throw ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
 
-      val seriesCollectThumbUrl = thumbnailLifecycle
-        .saveThumbnailToDiskIfDiskMode(
-          file.bytes,
-          collection.id,
-          ThumbnailLifecycle.Type.SERIES_COLLECTION
-        )
+      val seriesCollectThumbUrl =
+        thumbnailLifecycle
+          .saveThumbnailToDiskIfDiskMode(
+            file.bytes,
+            collection.id,
+            ThumbnailLifecycle.Type.SERIES_COLLECTION,
+          )
       var thumbSeriesCollect =
         ThumbnailSeriesCollection(
           collectionId = collection.id,

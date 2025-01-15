@@ -195,12 +195,13 @@ class ReadListController(
       if (!contentDetector.isImage(mediaType))
         throw ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
 
-      val readListThumbUrl = thumbnailLifecycle
-        .saveThumbnailToDiskIfDiskMode(
-          file.bytes,
-          readList.id,
-          ThumbnailLifecycle.Type.READ_LIST
-        )
+      val readListThumbUrl =
+        thumbnailLifecycle
+          .saveThumbnailToDiskIfDiskMode(
+            file.bytes,
+            readList.id,
+            ThumbnailLifecycle.Type.READ_LIST,
+          )
       var thumbReadList =
         ThumbnailReadList(
           readListId = readList.id,

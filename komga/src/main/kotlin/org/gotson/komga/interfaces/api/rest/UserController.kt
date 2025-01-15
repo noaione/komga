@@ -63,8 +63,7 @@ class UserController(
   @GetMapping("me")
   fun getMe(
     @AuthenticationPrincipal principal: KomgaPrincipal,
-  ): UserDto =
-    principal.toDto(komgaProperties.thumbnailGeneration.saveMode)
+  ): UserDto = principal.toDto(komgaProperties.thumbnailGeneration.saveMode)
 
   @PatchMapping("me/password")
   @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -81,8 +80,7 @@ class UserController(
 
   @GetMapping
   @PreAuthorize("hasRole('ADMIN')")
-  fun getAll(): List<UserDto> =
-    userRepository.findAll().map { it.toDto(komgaProperties.thumbnailGeneration.saveMode) }
+  fun getAll(): List<UserDto> = userRepository.findAll().map { it.toDto(komgaProperties.thumbnailGeneration.saveMode) }
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)

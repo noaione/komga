@@ -42,13 +42,15 @@ class ThumbnailBookDao(
       .map { it.toDomain() }
 
   override fun findAllByType(type: ThumbnailBook.Type): Collection<ThumbnailBook> =
-    dsl.selectFrom(tb)
+    dsl
+      .selectFrom(tb)
       .where(tb.TYPE.eq(type.toString()))
       .fetchInto(tb)
       .map { it.toDomain() }
 
   override fun findAllDiskThumbnail(): Collection<ThumbnailBook> =
-    dsl.selectFrom(tb)
+    dsl
+      .selectFrom(tb)
       .where(tb.URL.isNotNull)
       .fetchInto(tb)
       .map { it.toDomain() }

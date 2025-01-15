@@ -792,22 +792,24 @@ class OpdsController(
 
       val seriesSearch =
         SeriesSearch(
-          condition = SearchCondition.AllOfSeries(
-            buildList {
-              add(SearchCondition.AnyOfSeries(listOf(SearchCondition.LibraryId(SearchOperator.Is(library.id)))))
-              add(SearchCondition.Deleted(SearchOperator.IsFalse))
-            }
-          )
+          condition =
+            SearchCondition.AllOfSeries(
+              buildList {
+                add(SearchCondition.AnyOfSeries(listOf(SearchCondition.LibraryId(SearchOperator.Is(library.id)))))
+                add(SearchCondition.Deleted(SearchOperator.IsFalse))
+              },
+            ),
         )
 
       val pageable = PageRequest.of(page.pageNumber, page.pageSize, Sort.by(Sort.Order.desc("lastModified")))
 
-      val seriesPage = seriesDtoRepository
-        .findAllRecentlyUpdated(
-          seriesSearch,
-          SearchContext(principal.user),
-          pageable,
-        )
+      val seriesPage =
+        seriesDtoRepository
+          .findAllRecentlyUpdated(
+            seriesSearch,
+            SearchContext(principal.user),
+            pageable,
+          )
 
       val uriBuilder = uriBuilder("$ROUTE_SERIES_LATEST_LIBRARIES/$id")
 
@@ -838,13 +840,14 @@ class OpdsController(
 
       val bookSearch =
         BookSearch(
-          condition = SearchCondition.AllOfBook(
-            buildList {
-              add(SearchCondition.AnyOfBook(listOf(SearchCondition.LibraryId(SearchOperator.Is(library.id)))))
-              add(SearchCondition.AnyOfBook(listOf(SearchCondition.MediaStatus(SearchOperator.Is(Media.Status.READY)))))
-              add(SearchCondition.Deleted(SearchOperator.IsFalse))
-            }
-          )
+          condition =
+            SearchCondition.AllOfBook(
+              buildList {
+                add(SearchCondition.AnyOfBook(listOf(SearchCondition.LibraryId(SearchOperator.Is(library.id)))))
+                add(SearchCondition.AnyOfBook(listOf(SearchCondition.MediaStatus(SearchOperator.Is(Media.Status.READY)))))
+                add(SearchCondition.Deleted(SearchOperator.IsFalse))
+              },
+            ),
         )
 
       val pageable = PageRequest.of(page.pageNumber, page.pageSize, Sort.by(Sort.Order.desc("createdDate")))

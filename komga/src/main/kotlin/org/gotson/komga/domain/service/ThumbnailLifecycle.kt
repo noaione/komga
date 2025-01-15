@@ -73,7 +73,12 @@ class ThumbnailLifecycle(
     READ_LIST,
   }
 
-  data class Thumbnail(val id: String, val itemId: String, val type: Type, val url: URI)
+  data class Thumbnail(
+    val id: String,
+    val itemId: String,
+    val type: Type,
+    val url: URI,
+  )
 
   val divinaExtractors =
     extractors
@@ -261,7 +266,6 @@ class ThumbnailLifecycle(
       )
     } ?: memoryThumb
   }
-
 
   fun getPoster(book: BookWithMedia): TypedBytes? =
     when (book.media.profile) {
@@ -490,7 +494,10 @@ class ThumbnailLifecycle(
     thumbnail: ByteArray,
     filename: String,
   ): URI? {
-    if (!komgaProperties.thumbnailGeneration.saveMode.toString().contains("DISK")) {
+    if (!komgaProperties.thumbnailGeneration.saveMode
+        .toString()
+        .contains("DISK")
+    ) {
       logger.warn { "Thumbnail generation is not set to disk, cannot save to disk!" }
       return null
     }

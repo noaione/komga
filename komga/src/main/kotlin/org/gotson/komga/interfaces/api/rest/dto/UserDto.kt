@@ -41,8 +41,7 @@ fun KomgaUser.toDto(thumbnailMode: ThumbnailSaveMode) =
     thumbnailSaveMode = thumbnailMode,
   )
 
-fun KomgaPrincipal.toDto(thumbnailMode: ThumbnailSaveMode) =
-  user.toDto(thumbnailMode = thumbnailMode)
+fun KomgaPrincipal.toDto(thumbnailMode: ThumbnailSaveMode) = user.toDto(thumbnailMode = thumbnailMode)
 
 data class UserCreationDto(
   @get:Email(regexp = ".+@.+\\..+") val email: String,

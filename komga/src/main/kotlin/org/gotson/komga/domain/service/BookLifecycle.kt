@@ -587,15 +587,20 @@ class BookLifecycle(
       if (it.deleteIfExists()) logger.info { "Deleted file: $it" }
     }
 
-    thumbnailBookRepository.findAllByBookIdAndType(book.id, setOf(ThumbnailBook.Type.GENERATED))
+    thumbnailBookRepository
+      .findAllByBookIdAndType(book.id, setOf(ThumbnailBook.Type.GENERATED))
       .filter { it.url != null }
       .forEach { taskEmitter.deleteThumbnail(it.id, it.bookId, ThumbnailLifecycle.Type.BOOK) }
 
-    thumbnailBookRepository.findAllByBookIdAndType(book.id, setOf(ThumbnailBook.Type.USER_UPLOADED))
+    thumbnailBookRepository
+      .findAllByBookIdAndType(book.id, setOf(ThumbnailBook.Type.USER_UPLOADED))
       .filter { it.url != null }
       .forEach { taskEmitter.deleteThumbnail(it.id, it.bookId, ThumbnailLifecycle.Type.BOOK) }
 
-    if (book.path.parent.listDirectoryEntries().isEmpty())
+    if (book.path.parent
+        .listDirectoryEntries()
+        .isEmpty()
+    )
       if (book.path.parent.deleteIfExists()) {
         logger.info { "Deleted directory: ${book.path.parent}" }
         historicalEventRepository.insert(HistoricalEvent.SeriesFolderDeleted(book.seriesId, book.path.parent, "Folder was deleted because it was empty"))

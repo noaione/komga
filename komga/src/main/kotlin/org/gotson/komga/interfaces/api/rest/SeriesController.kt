@@ -521,12 +521,13 @@ class SeriesController(
     if (!contentDetector.isImage(mediaType))
       throw ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
 
-    val seriesThumb = thumbnailLifecycle
-      .saveThumbnailToDiskIfDiskMode(
-        file.bytes,
-        series.id,
-        ThumbnailLifecycle.Type.SERIES
-      )
+    val seriesThumb =
+      thumbnailLifecycle
+        .saveThumbnailToDiskIfDiskMode(
+          file.bytes,
+          series.id,
+          ThumbnailLifecycle.Type.SERIES,
+        )
     var thumbSeries =
       ThumbnailSeries(
         seriesId = series.id,
@@ -837,16 +838,17 @@ class SeriesController(
             file.inputStream.transferTo(responseStream)
           }
 
-        ResponseEntity.ok()
+        ResponseEntity
+          .ok()
           .headers(
             HttpHeaders().apply {
               contentDisposition =
-                ContentDisposition.builder("attachment")
+                ContentDisposition
+                  .builder("attachment")
                   .filename(file.filename, UTF_8)
                   .build()
             },
-          )
-          .contentType(getMediaTypeOrDefault(media.mediaType))
+          ).contentType(getMediaTypeOrDefault(media.mediaType))
           .body(streamingResponse)
       } else {
         val streamingResponse =
@@ -872,16 +874,17 @@ class SeriesController(
             }
           }
 
-        ResponseEntity.ok()
+        ResponseEntity
+          .ok()
           .headers(
             HttpHeaders().apply {
               contentDisposition =
-                ContentDisposition.builder("attachment")
+                ContentDisposition
+                  .builder("attachment")
                   .filename(seriesMetadataRepository.findById(seriesId).title + ".zip", UTF_8)
                   .build()
             },
-          )
-          .contentType(MediaType.parseMediaType(ZIP.type))
+          ).contentType(MediaType.parseMediaType(ZIP.type))
           .body(streamingResponse)
       }
 
