@@ -1635,6 +1635,47 @@
         }
       }
     },
+    "/api/v1/series/{seriesId}/scan": {
+      "post": {
+        "tags": [
+          "series-controller"
+        ],
+        "operationId": "scan",
+        "parameters": [
+          {
+            "name": "seriesId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scanDeep",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Accepted"
+          }
+        }
+      }
+    },
     "/api/v1/series/{seriesId}/read-progress": {
       "post": {
         "tags": [
@@ -2307,7 +2348,7 @@
         "tags": [
           "library-controller"
         ],
-        "operationId": "scan",
+        "operationId": "scan_1",
         "parameters": [
           {
             "name": "libraryId",
@@ -5487,6 +5528,114 @@
         }
       }
     },
+    "/opds/v1.2/series/latest-library": {
+      "get": {
+        "tags": [
+          "opds-controller"
+        ],
+        "operationId": "getLatestSeriesByLibraries",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/atom+xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpdsFeed"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpdsFeed"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpdsFeed"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/opds/v1.2/series/latest-library/{id}": {
+      "get": {
+        "tags": [
+          "opds-controller"
+        ],
+        "operationId": "getLatestSeriesForLibrary",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/atom+xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpdsFeed"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpdsFeed"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpdsFeed"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/opds/v1.2/search": {
       "get": {
         "tags": [
@@ -6242,6 +6391,114 @@
         ],
         "operationId": "getLatestBooks_2",
         "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/atom+xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpdsFeed"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpdsFeed"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpdsFeed"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/opds/v1.2/books/latest-library": {
+      "get": {
+        "tags": [
+          "opds-controller"
+        ],
+        "operationId": "getLatestBooksByLibraries",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/atom+xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpdsFeed"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpdsFeed"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpdsFeed"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/opds/v1.2/books/latest-library/{id}": {
+      "get": {
+        "tags": [
+          "opds-controller"
+        ],
+        "operationId": "getLatestBooksForLibrary",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "page",
             "in": "query",
@@ -11875,7 +12132,8 @@
           "labelsExclude",
           "roles",
           "sharedAllLibraries",
-          "sharedLibrariesIds"
+          "sharedLibrariesIds",
+          "thumbnailSaveMode"
         ],
         "type": "object",
         "properties": {
@@ -11918,6 +12176,15 @@
           },
           "ageRestriction": {
             "$ref": "#/components/schemas/AgeRestrictionDto"
+          },
+          "thumbnailSaveMode": {
+            "type": "string",
+            "enum": [
+              "MEMORY",
+              "ALWAYS_MEMORY",
+              "DISK",
+              "ALWAYS_DISK"
+            ]
           }
         }
       },
@@ -12776,6 +13043,9 @@
                   "negative": {
                     "type": "boolean"
                   },
+                  "positive": {
+                    "type": "boolean"
+                  },
                   "units": {
                     "type": "array",
                     "items": {
@@ -12860,6 +13130,9 @@
                     "format": "int32"
                   },
                   "negative": {
+                    "type": "boolean"
+                  },
+                  "positive": {
                     "type": "boolean"
                   },
                   "units": {
@@ -14642,17 +14915,17 @@
               "type": "string"
             }
           },
-          "ageRestriction": {
-            "$ref": "#/components/schemas/AgeRestrictionUpdateDto"
-          },
-          "labelsAllow": {
+          "labelsExclude": {
             "uniqueItems": true,
             "type": "array",
             "items": {
               "type": "string"
             }
           },
-          "labelsExclude": {
+          "ageRestriction": {
+            "$ref": "#/components/schemas/AgeRestrictionUpdateDto"
+          },
+          "labelsAllow": {
             "uniqueItems": true,
             "type": "array",
             "items": {
@@ -14707,11 +14980,6 @@
           "koboProxy": {
             "type": "boolean"
           },
-          "serverPort": {
-            "maximum": 65535,
-            "type": "integer",
-            "format": "int32"
-          },
           "serverContextPath": {
             "pattern": "^\\/[\\w-\\/]*[a-zA-Z0-9]$",
             "type": "string"
@@ -14723,6 +14991,11 @@
           },
           "kepubifyPath": {
             "type": "string"
+          },
+          "serverPort": {
+            "maximum": 65535,
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -14810,31 +15083,11 @@
           "alternateTitlesLock": {
             "type": "boolean"
           },
-          "tags": {
-            "uniqueItems": true,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
           "links": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/WebLinkUpdateDto"
             }
-          },
-          "readingDirection": {
-            "type": "string",
-            "enum": [
-              "LEFT_TO_RIGHT",
-              "RIGHT_TO_LEFT",
-              "VERTICAL",
-              "WEBTOON"
-            ]
-          },
-          "ageRating": {
-            "type": "integer",
-            "format": "int32"
           },
           "genres": {
             "uniqueItems": true,
@@ -14847,6 +15100,19 @@
             "type": "integer",
             "format": "int32"
           },
+          "ageRating": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "readingDirection": {
+            "type": "string",
+            "enum": [
+              "LEFT_TO_RIGHT",
+              "RIGHT_TO_LEFT",
+              "VERTICAL",
+              "WEBTOON"
+            ]
+          },
           "sharingLabels": {
             "uniqueItems": true,
             "type": "array",
@@ -14858,6 +15124,13 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AlternateTitleUpdateDto"
+            }
+          },
+          "tags": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           }
         },
@@ -14982,12 +15255,17 @@
           "linksLock": {
             "type": "boolean"
           },
-          "tags": {
-            "uniqueItems": true,
+          "links": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/WebLinkUpdateDto"
             }
+          },
+          "summary": {
+            "type": "string"
+          },
+          "isbn": {
+            "type": "string"
           },
           "authors": {
             "type": "array",
@@ -14995,20 +15273,15 @@
               "$ref": "#/components/schemas/AuthorUpdateDto"
             }
           },
-          "summary": {
-            "type": "string"
-          },
           "releaseDate": {
             "type": "string",
             "format": "date"
           },
-          "isbn": {
-            "type": "string"
-          },
-          "links": {
+          "tags": {
+            "uniqueItems": true,
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/WebLinkUpdateDto"
+              "type": "string"
             }
           }
         },
@@ -16730,6 +17003,12 @@
             "type": "number",
             "format": "double"
           },
+          "charset": {
+            "type": "string"
+          },
+          "concrete": {
+            "type": "boolean"
+          },
           "wildcardType": {
             "type": "boolean"
           },
@@ -16737,12 +17016,6 @@
             "type": "boolean"
           },
           "subtypeSuffix": {
-            "type": "string"
-          },
-          "concrete": {
-            "type": "boolean"
-          },
-          "charset": {
             "type": "string"
           }
         }
