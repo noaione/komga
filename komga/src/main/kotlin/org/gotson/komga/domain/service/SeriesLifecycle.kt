@@ -285,7 +285,14 @@ class SeriesLifecycle(
               bookRepository.findFirstIdInSeriesOrNull(seriesId)
             }
           }
-
+          Library.SeriesCover.FIRST_UNREAD_OR_LAST -> {
+            if (userId != null) {
+              bookRepository.findFirstUnreadIdInSeriesOrNull(seriesId, userId)
+                ?: bookRepository.findLastIdInSeriesOrNull(seriesId)
+            } else {
+              bookRepository.findLastIdInSeriesOrNull(seriesId)
+            }
+          }
           Library.SeriesCover.LAST -> bookRepository.findLastIdInSeriesOrNull(seriesId)
         }
       if (bookId != null) return bookLifecycle.getThumbnailBytes(bookId)?.bytes
