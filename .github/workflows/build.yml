@@ -1,12 +1,9 @@
 name: Build
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to build'
-        required: true
-        default: 'latest'
+  push:
+    branches:
+      - naoX
 
 jobs:
   build:
@@ -38,7 +35,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: komga-${{ github.event.inputs.version }}
+          name: komga-latest
           path: |
             komga/build/libs/*.jar
             komga-tray/build/libs/*.jar
