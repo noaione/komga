@@ -47,14 +47,14 @@ class ThumbnailSeriesDao(
       .map { it.toDomain() }
 
   override fun findAllByType(type: ThumbnailSeries.Type): Collection<ThumbnailSeries> =
-    dsl
+    dslRO
       .selectFrom(ts)
       .where(ts.TYPE.eq(type.toString()))
       .fetchInto(ts)
       .map { it.toDomain() }
 
   override fun findAllDiskThumbnail(): Collection<ThumbnailSeries> =
-    dsl
+    dslRO
       .selectFrom(ts)
       .where(ts.URL.isNotNull)
       .fetchInto(ts)
