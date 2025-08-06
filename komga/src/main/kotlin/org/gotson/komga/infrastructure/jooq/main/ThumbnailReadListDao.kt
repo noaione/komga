@@ -42,14 +42,14 @@ class ThumbnailReadListDao(
       .firstOrNull()
 
   override fun findAllByType(type: ThumbnailReadList.Type): Collection<ThumbnailReadList> =
-    dsl
+    dslRO
       .selectFrom(tr)
       .where(tr.TYPE.eq(type.toString()))
       .fetchInto(tr)
       .map { it.toDomain() }
 
   override fun findAllDiskThumbnail(): Collection<ThumbnailReadList> =
-    dsl
+    dslRO
       .selectFrom(tr)
       .where(tr.URL.isNotNull)
       .fetchInto(tr)
