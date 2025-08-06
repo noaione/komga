@@ -23,11 +23,11 @@
       "description": "Local development server",
       "variables": {
         "port": {
+          "default": "25600",
           "enum": [
             "8080",
             "25600"
-          ],
-          "default": "25600"
+          ]
         }
       }
     }
@@ -7186,6 +7186,49 @@
         ]
       }
     },
+    "/api/v1/series/{seriesId}/scan": {
+      "post": {
+        "description": "Required role: **ADMIN**",
+        "operationId": "scan",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seriesId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scanDeep",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          },
+          "400": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          }
+        },
+        "summary": "Scan a series",
+        "tags": [
+          "Series"
+        ]
+      }
+    },
     "/api/v1/series/{seriesId}/thumbnail": {
       "get": {
         "operationId": "getSeriesThumbnail",
@@ -13082,7 +13125,9 @@
             "type": "boolean"
           },
           "kepubifyPath": {
-            "type": "string"
+            "type": "string",
+            "deprecated": true,
+            "description": "Will be removed in a future version"
           },
           "koboPort": {
             "type": "integer",
@@ -13750,6 +13795,15 @@
               "type": "string"
             },
             "uniqueItems": true
+          },
+          "thumbnailSaveMode": {
+            "type": "string",
+            "enum": [
+              "MEMORY",
+              "ALWAYS_MEMORY",
+              "DISK",
+              "ALWAYS_DISK"
+            ]
           }
         },
         "required": [
@@ -13759,7 +13813,8 @@
           "labelsExclude",
           "roles",
           "sharedAllLibraries",
-          "sharedLibrariesIds"
+          "sharedLibrariesIds",
+          "thumbnailSaveMode"
         ]
       },
       "UserUpdateDto": {
