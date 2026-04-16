@@ -7,6 +7,7 @@ import org.gotson.komga.domain.model.Dimension
 import org.gotson.komga.domain.model.Media
 import org.gotson.komga.domain.model.MediaNotReadyException
 import org.gotson.komga.domain.model.MediaProfile
+import org.gotson.komga.domain.model.MediaType
 import org.gotson.komga.domain.model.NoThumbnailFoundException
 import org.gotson.komga.domain.model.ThumbnailBook
 import org.gotson.komga.domain.model.ThumbnailReadList
