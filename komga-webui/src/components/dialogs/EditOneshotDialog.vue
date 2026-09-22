@@ -655,6 +655,11 @@ export default Vue.extend({
       type: [Object as () => Oneshot, Array as () => Oneshot[]],
       required: true,
     },
+    additionalRoles: {
+      type: Array as () => string[],
+      required: false,
+      default: () => [],
+    },
   },
   watch: {
     value(val) {
@@ -733,7 +738,7 @@ export default Vue.extend({
         remoteRoles = this.books.flatMap(b => b.metadata.authors).map(a => a.role)
       else if (this.books?.metadata?.authors)
         remoteRoles = this.books.metadata.authors.map(a => a.role)
-      const allRoles = this.$_.uniq([...authorRoles, ...remoteRoles, ...this.customRoles])
+      const allRoles = this.$_.uniq([...authorRoles, ...remoteRoles, ...this.customRoles, ...this.additionalRoles])
       return allRoles.map((role: string) => ({
         name: this.$te(`author_roles.${role}`) ? this.$t(`author_roles.${role}`).toString() : role,
         value: role,
