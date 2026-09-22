@@ -18,6 +18,10 @@ interface ThumbnailSeriesRepository {
 
   fun getSeriesIdOrNull(thumbnailId: String): String?
 
+  fun findAllByType(type: ThumbnailSeries.Type): Collection<ThumbnailSeries>
+
+  fun findAllDiskThumbnail(): Collection<ThumbnailSeries>
+
   fun insert(thumbnail: ThumbnailSeries)
 
   fun update(thumbnail: ThumbnailSeries)

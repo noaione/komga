@@ -46,6 +46,8 @@ class KomgaProperties {
 
   var lucene = Lucene()
 
+  var thumbnailGeneration = ThumbnailGeneration()
+
   var configDir: String? = null
 
   var kobo = Kobo()
@@ -109,5 +111,17 @@ class KomgaProperties {
     var syncItemLimit: Int = 100
 
     var kepubifyPath: String? = null
+  }
+
+  class ThumbnailGeneration {
+    @get:Positive
+    var height: Int = 300
+
+    var saveMode = ThumbnailSaveMode.MEMORY
+
+    // Where to save thumbnails when using DISK mode, defaults to ${configDir}/thumbnails
+    var diskDirectory: String? = null
+
+    var skipRenaming: Boolean = false
   }
 }

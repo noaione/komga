@@ -3,6 +3,7 @@ package org.gotson.komga.application.tasks
 import org.gotson.komga.domain.model.BookMetadataPatchCapability
 import org.gotson.komga.domain.model.BookPageNumbered
 import org.gotson.komga.domain.model.CopyMode
+import org.gotson.komga.domain.service.ThumbnailLifecycle
 import org.gotson.komga.infrastructure.search.LuceneEntity
 
 const val HIGHEST_PRIORITY = 8
@@ -226,6 +227,22 @@ sealed class Task(
     override fun toString(): String = "UpgradeIndex(priority='$priority')"
   }
 
+  class RenameDiskThumbnails(
+    priority: Int = DEFAULT_PRIORITY,
+  ) : Task(priority) {
+    override val uniqueId = "RenameDiskThumbnails"
+
+    override fun toString(): String = "RenameDiskThumbnails(priority='$priority')"
+  }
+
+  class MoveGeneratedThumbnails(
+    priority: Int = DEFAULT_PRIORITY,
+  ) : Task(priority) {
+    override val uniqueId = "MOVE_GENERATED_THUMBNAILS"
+
+    override fun toString(): String = "MoveGeneratedThumbnails(priority='$priority')"
+  }
+
   class DeleteBook(
     val bookId: String,
     priority: Int = DEFAULT_PRIORITY,
@@ -251,5 +268,16 @@ sealed class Task(
     override val uniqueId = "FIND_BOOK_THUMBNAILS_TO_REGENERATE"
 
     override fun toString(): String = "FindBookThumbnailsToRegenerate(forBiggerResultOnly='$forBiggerResultOnly', priority='$priority')"
+  }
+
+  class DeleteThumbnail(
+    val thumbId: String,
+    val itemId: String,
+    priority: Int = DEFAULT_PRIORITY,
+    val type: ThumbnailLifecycle.Type,
+  ) : Task(priority) {
+    override val uniqueId = "DELETE_THUMBNAIL_${type}_${itemId}_$thumbId"
+
+    override fun toString(): String = "DeleteThumbnail(id='$thumbId', itemId='$itemId', type='$type', priority='$priority')"
   }
 }
