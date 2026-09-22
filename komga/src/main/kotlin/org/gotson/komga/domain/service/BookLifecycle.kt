@@ -1,6 +1,7 @@
 package org.gotson.komga.domain.service
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.gotson.komga.application.tasks.TaskEmitter
 import org.gotson.komga.domain.model.Book
 import org.gotson.komga.domain.model.BookAction
 import org.gotson.komga.domain.model.BookWithMedia
@@ -67,7 +68,9 @@ class BookLifecycle(
   private val bookAnalyzer: BookAnalyzer,
   private val imageConverter: ImageConverter,
   private val eventPublisher: ApplicationEventPublisher,
+  private val taskEmitter: TaskEmitter,
   private val transactionTemplate: TransactionTemplate,
+  private val thumbnailLifecycle: ThumbnailLifecycle,
   private val hasher: Hasher,
   private val hasherKoreader: KoreaderHasher,
   private val historicalEventRepository: HistoricalEventRepository,
@@ -142,10 +145,8 @@ class BookLifecycle(
   fun generateThumbnailAndPersist(book: Book) {
     logger.info { "Generate thumbnail and persist for book: $book" }
     try {
-      addThumbnailForBook(bookAnalyzer.generateThumbnail(BookWithMedia(book, mediaRepository.findById(book.id))), MarkSelectedPreference.IF_NONE_OR_GENERATED)
+      addThumbnailForBook(thumbnailLifecycle.generateThumbnail(BookWithMedia(book, mediaRepository.findById(book.id))), MarkSelectedPreference.IF_NONE_OR_GENERATED)
     } catch (ex: NoThumbnailFoundException) {
-      logger.error { "Error while creating thumbnail" }
-    } catch (ex: Exception) {
       logger.error(ex) { "Error while creating thumbnail" }
     }
   }
@@ -157,6 +158,9 @@ class BookLifecycle(
     when (thumbnail.type) {
       ThumbnailBook.Type.GENERATED -> {
         // only one generated thumbnail is allowed
+        thumbnailBookRepository.findAllByBookIdAndType(thumbnail.bookId, setOf(ThumbnailBook.Type.GENERATED)).forEach {
+          taskEmitter.deleteThumbnail(it.id, it.bookId, ThumbnailLifecycle.Type.BOOK)
+        }
         thumbnailBookRepository.deleteByBookIdAndType(thumbnail.bookId, ThumbnailBook.Type.GENERATED)
         thumbnailBookRepository.insert(thumbnail.copy(selected = false))
       }
@@ -201,6 +205,7 @@ class BookLifecycle(
   fun deleteThumbnailForBook(thumbnail: ThumbnailBook) {
     require(thumbnail.type == ThumbnailBook.Type.USER_UPLOADED) { "Only uploaded thumbnails can be deleted" }
     thumbnailBookRepository.delete(thumbnail.id)
+    taskEmitter.deleteThumbnail(thumbnail.id, thumbnail.bookId, ThumbnailLifecycle.Type.BOOK)
     thumbnailsHouseKeeping(thumbnail.bookId)
     eventPublisher.publishEvent(DomainEvent.ThumbnailBookDeleted(thumbnail))
   }
@@ -249,7 +254,7 @@ class BookLifecycle(
     return if (thumbnail.type == ThumbnailBook.Type.GENERATED) {
       val book = bookRepository.findByIdOrNull(bookId) ?: return null
       val media = mediaRepository.findById(book.id)
-      bookAnalyzer.getPoster(BookWithMedia(book, media))
+      thumbnailLifecycle.getPoster(BookWithMedia(book, media))
     } else {
       getThumbnailBytes(bookId)
     }
@@ -277,6 +282,7 @@ class BookLifecycle(
         .mapNotNull {
           if (!it.exists()) {
             logger.warn { "Thumbnail doesn't exist, removing entry" }
+            taskEmitter.deleteThumbnail(it.id, it.bookId, ThumbnailLifecycle.Type.BOOK)
             thumbnailBookRepository.delete(it.id)
             null
           } else {
@@ -370,6 +376,9 @@ class BookLifecycle(
       readListRepository.removeBookFromAll(book.id)
 
       mediaRepository.delete(book.id)
+      thumbnailBookRepository.findByIdOrNull(book.id)?.let {
+        taskEmitter.deleteThumbnail(it.id, it.bookId, ThumbnailLifecycle.Type.BOOK)
+      }
       thumbnailBookRepository.deleteByBookId(book.id)
       bookMetadataRepository.delete(book.id)
       bookProjectionRepository.delete(book.id)
@@ -397,6 +406,13 @@ class BookLifecycle(
       readListRepository.removeBooksFromAll(bookIds)
 
       mediaRepository.delete(bookIds)
+
+      bookIds.forEach { bookId ->
+        thumbnailBookRepository.findAllByBookId(bookId).forEach {
+          taskEmitter.deleteThumbnail(it.id, it.bookId, ThumbnailLifecycle.Type.BOOK)
+        }
+      }
+
       thumbnailBookRepository.deleteByBookIds(bookIds)
       bookMetadataRepository.delete(bookIds)
       bookProjectionRepository.delete(bookIds)
@@ -560,6 +576,16 @@ class BookLifecycle(
     thumbnails.forEach {
       if (it.deleteIfExists()) logger.info { "Deleted file: $it" }
     }
+
+    thumbnailBookRepository
+      .findAllByBookIdAndType(book.id, setOf(ThumbnailBook.Type.GENERATED))
+      .filter { it.url != null }
+      .forEach { taskEmitter.deleteThumbnail(it.id, it.bookId, ThumbnailLifecycle.Type.BOOK) }
+
+    thumbnailBookRepository
+      .findAllByBookIdAndType(book.id, setOf(ThumbnailBook.Type.USER_UPLOADED))
+      .filter { it.url != null }
+      .forEach { taskEmitter.deleteThumbnail(it.id, it.bookId, ThumbnailLifecycle.Type.BOOK) }
 
     if (book.path.parent
         .listDirectoryEntries()

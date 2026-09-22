@@ -71,6 +71,7 @@ import {BookThumbnailDto} from '@/types/komga-books'
 import {ReadListThumbnailDto} from '@/types/komga-readlists'
 import {Dimension} from '@/types/image'
 import {getFileSize} from '@/functions/file'
+import {UserDto} from '@/types/komga-users'
 
 export default Vue.extend({
   name: 'ThumbnailCard',
@@ -111,7 +112,10 @@ export default Vue.extend({
     },
     fileTooBig(): boolean {
       if (this.item instanceof File) {
-        return this.item.size > 1_000_000
+        if (this.uploadFileLimit === -1) {
+          return false
+        }
+        return this.item.size > this.uploadFileLimit
       } else {
         return false
       }
@@ -172,6 +176,13 @@ export default Vue.extend({
       } else {
         return this.item.type !== 'SIDECAR' && this.item.type !== 'GENERATED'
       }
+    },
+    uploadFileLimit(): number {
+      const actuator = this.$store.state.actuatorInfo as ActuatorInfo
+      if (actuator && typeof actuator?.thumbnail?.limit === 'number') {
+        return actuator.thumbnail.limit
+      }
+      return 1_000_000
     },
   },
   methods: {
