@@ -333,10 +333,10 @@ class BookController(
     produces = [MediaType.IMAGE_JPEG_VALUE],
   )
   fun getBookThumbnail(
-    @AuthenticationPrincipal principal: KomgaPrincipal,
+    @AuthenticationPrincipal principal: KomgaPrincipal?,
     @PathVariable bookId: String,
   ): ByteArray {
-    contentRestrictionChecker.checkContentRestrictionBook(principal.user, bookId)
+    if (principal != null) contentRestrictionChecker.checkContentRestrictionBook(principal.user, bookId)
 
     return bookLifecycle.getThumbnailBytes(bookId)?.bytes ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
   }

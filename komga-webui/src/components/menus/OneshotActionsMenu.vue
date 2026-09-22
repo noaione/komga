@@ -25,6 +25,12 @@
         <v-list-item @click="markUnread" v-if="!isUnread">
           <v-list-item-title>{{ $t('menu.mark_unread') }}</v-list-item-title>
         </v-list-item>
+        <v-list-item :href="fileUrl" v-if="canDownload">
+          <v-list-item-title>{{ $t('common.download') }}</v-list-item-title>
+        </v-list-item>
+        <v-list-item @click="promptOpenPageAPI">
+          <v-list-item-title>{{ $t('browse_book.open_page_prompt') }}</v-list-item-title>
+        </v-list-item>
         <v-list-item @click="promptDelete" class="list-danger" v-if="isAdmin">
           <v-list-item-title>{{ $t('menu.delete') }}</v-list-item-title>
         </v-list-item>
@@ -39,6 +45,7 @@ import Vue from 'vue'
 import {BookDto} from '@/types/komga-books'
 import {SeriesDto} from '@/types/komga-series'
 import {BookSearch, SearchConditionSeriesId, SearchOperatorIs} from '@/types/komga-search'
+import {bookFileUrl, bookPageUrl} from '@/functions/urls'
 
 export default Vue.extend({
   name: 'OneShotActionsMenu',
@@ -80,6 +87,15 @@ export default Vue.extend({
     seriesId(): string {
       return this.series ? this.series.id : this.book?.seriesId
     },
+    unavailable (): boolean {
+      return this.book.deleted || this.$store.getters.getLibraryById(this.book.libraryId).unavailable
+    },
+    canDownload (): boolean {
+      return this.$store.getters.meFileDownload && !this.unavailable
+    },
+    fileUrl (): string {
+      return bookFileUrl(this.book.id)
+    },
   },
   methods: {
     analyze() {
@@ -108,6 +124,29 @@ export default Vue.extend({
     promptDelete() {
       if (this.book) this.$store.dispatch('dialogDeleteBook', this.book)
       else this.$store.dispatch('dialogDeleteSeries', this.series)
+    },
+    promptOpenPageAPI() {
+      const inputData = prompt('Enter page number to open', '1')
+
+      if (typeof inputData === 'string' && inputData.trim().length > 0) {
+        const pageNumber = Number.parseInt(inputData)
+
+        if (Number.isNaN(pageNumber)) {
+          alert('Invalid page number')
+          return
+        } else {
+          // use window.open _blank to open in new tab
+          if (this.book.media.pagesCount < pageNumber) {
+            alert('Page number exceeds total pages')
+            return
+          } else if (pageNumber < 1) {
+            alert('Page number cannot be less than 1')
+            return
+          } else {
+            window.open(bookPageUrl(this.book.id, pageNumber), '_blank', 'noopener')
+          }
+        }
+      }
     },
   },
 })
