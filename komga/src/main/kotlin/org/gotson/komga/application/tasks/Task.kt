@@ -31,7 +31,7 @@ sealed class Task(
   class ScanSeries(
     val seriesId: String,
     val scanDeep: Boolean,
-    priority: Int = DEFAULT_PRIORITY
+    priority: Int = DEFAULT_PRIORITY,
   ) : Task(priority) {
     override val uniqueId = "SCAN_SERIES_${seriesId}_DEEP_$scanDeep"
 

@@ -191,7 +191,8 @@ tasks {
     }
   }
 
-  register<Exec>("webuiCopyDist") {
+  register<Sync>("webuiCopyDist") {
+    description = "Copies the WebUI build into resources/public"
     group = "web"
     from("$webui/dist/")
     into("$projectDir/src/main/resources/public/")
@@ -235,11 +236,14 @@ tasks {
   }
 
   withType<ProcessResources> {
+    // resolved at configuration time so the template expansion does not query the provider at execution time
+    val forkRevision = providers.gradleProperty("forkrevision").getOrElse("")
     filesMatching("application*.yml") {
       expand(
         mapOf(
           "version" to project.version.toString(),
           "rootDir" to project.rootDir.absolutePath,
+          "forkrevision" to forkRevision,
         ),
       )
     }

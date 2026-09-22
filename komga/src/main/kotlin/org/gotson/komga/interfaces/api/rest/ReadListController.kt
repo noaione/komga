@@ -153,7 +153,8 @@ class ReadListController(
     @AuthenticationPrincipal principal: KomgaPrincipal?,
     @PathVariable id: String,
   ): ResponseEntity<ByteArray> {
-    readListRepository.findByIdOrNull(id, SearchContext(principal.user))?.let {
+    // this route is public, so principal can be null
+    readListRepository.findByIdOrNull(id, SearchContext(principal?.user))?.let {
       return ResponseEntity
         .ok()
         .cacheControl(CacheControl.maxAge(1, TimeUnit.HOURS).cachePrivate())

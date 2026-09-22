@@ -129,11 +129,12 @@ class SeriesCollectionController(
     @AuthenticationPrincipal principal: KomgaPrincipal?,
     @PathVariable id: String,
   ): ResponseEntity<ByteArray> {
-    collectionRepository.findByIdOrNull(id, SearchContext(principal.user))?.let {
+    // this route is public, so principal can be null
+    collectionRepository.findByIdOrNull(id, SearchContext(principal?.user))?.let {
       return ResponseEntity
         .ok()
         .cacheControl(CacheControl.maxAge(1, TimeUnit.HOURS).cachePrivate())
-        .body(collectionLifecycle.getThumbnailBytes(it, principal.user.id))
+        .body(collectionLifecycle.getThumbnailBytes(it, principal?.user?.id))
     } ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
   }
 

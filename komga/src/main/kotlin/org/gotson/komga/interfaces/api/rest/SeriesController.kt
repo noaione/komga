@@ -866,16 +866,17 @@ class SeriesController(
             file.inputStream.transferTo(responseStream)
           }
 
-        ResponseEntity.ok()
+        ResponseEntity
+          .ok()
           .headers(
             HttpHeaders().apply {
               contentDisposition =
-                ContentDisposition.builder("attachment")
+                ContentDisposition
+                  .builder("attachment")
                   .filename(file.filename, UTF_8)
                   .build()
             },
-          )
-          .contentType(getMediaTypeOrDefault(media.mediaType))
+          ).contentType(getMediaTypeOrDefault(media.mediaType))
           .body(streamingResponse)
       } else {
         val streamingResponse =
@@ -901,16 +902,17 @@ class SeriesController(
             }
           }
 
-        ResponseEntity.ok()
+        ResponseEntity
+          .ok()
           .headers(
             HttpHeaders().apply {
               contentDisposition =
-                ContentDisposition.builder("attachment")
+                ContentDisposition
+                  .builder("attachment")
                   .filename(seriesMetadataRepository.findById(seriesId).title + ".zip", UTF_8)
                   .build()
             },
-          )
-          .contentType(MediaType.parseMediaType(ZIP.type))
+          ).contentType(MediaType.parseMediaType(ZIP.type))
           .body(streamingResponse)
       }
 

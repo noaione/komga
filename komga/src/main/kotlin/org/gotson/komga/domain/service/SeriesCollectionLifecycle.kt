@@ -141,7 +141,7 @@ class SeriesCollectionLifecycle(
 
   fun getThumbnailBytes(
     collection: SeriesCollection,
-    userId: String,
+    userId: String?,
   ): ByteArray {
     thumbnailSeriesCollectionRepository.findSelectedByCollectionIdOrNull(collection.id)?.let {
       if (it.thumbnail != null) return it.thumbnail
